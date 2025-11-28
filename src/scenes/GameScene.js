@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, LANES, TOWER_SLOTS_X, COLORS, TOWER, GAME, POINTS } from '../config.js';
 import Monster from '../entities/Monster.js';
 import Tower from '../entities/Tower.js';
+import TowerSlot from '../entities/TowerSlot.js';
 import Projectile from '../entities/Projectile.js';
 import WaveManager from '../systems/WaveManager.js';
 import MathsManager from '../systems/MathsManager.js';
@@ -30,26 +31,30 @@ export default class GameScene extends Phaser.Scene {
         // Draw lane grid
         this.drawLaneGrid();
 
-        // Create monsters group - use runChildUpdate to ensure preUpdate calls work
-        this.monsters = this.add.group({ runChildUpdate: true });
+        // Create monsters group - simple group, monsters handle their own physics
+        this.monsters = this.add.group();
 
         // Create towers group
         this.towers = this.add.group();
 
-        // Create projectiles group - use runChildUpdate for preUpdate calls
-        this.projectiles = this.add.group({ runChildUpdate: true });
+        // Create projectiles group - simple group, projectiles handle their own physics
+        this.projectiles = this.add.group();
 
         // Track tower slots: slots[laneIndex][slotIndex] = tower or null
         this.slots = [];
+        // Track tower slot UI (maths problems before tower spawns)
+        this.towerSlots = [];
         for (let l = 0; l < LANES.length; l++) {
             this.slots[l] = [];
+            this.towerSlots[l] = [];
             for (let s = 0; s < TOWER_SLOTS_X.length; s++) {
                 this.slots[l][s] = null;
+                this.towerSlots[l][s] = null;
             }
         }
 
-        // Create interactive zones for tower placement
-        this.createTowerSlotZones();
+        // Create tower slots with maths problems (towers spawn when solved)
+        this.createTowerSlots();
 
         // Create wave manager to spawn monsters
         this.waveManager = new WaveManager(this);
@@ -62,14 +67,8 @@ export default class GameScene extends Phaser.Scene {
             }
         });
 
-        // Set up projectile-monster collision
-        this.physics.add.collider(
-            this.projectiles,
-            this.monsters,
-            this.handleProjectileMonsterCollision,
-            null,
-            this
-        );
+        // Note: Collision detection is done manually in update()
+        // because physics groups interfere with our custom sprite classes
 
         // Create input box at bottom of screen
         this.inputBox = new InputBox(this, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 40);
@@ -81,43 +80,26 @@ export default class GameScene extends Phaser.Scene {
         this.hud = new HUD(this, 10, 10);
     }
 
-    createTowerSlotZones() {
-        const difficulties = [null, 'easy', 'medium', 'hard']; // null = empty
+    createTowerSlots() {
+        // Assign difficulties to slots in a pattern
+        // Each lane has: easy, medium, hard, easy (or similar pattern)
+        const slotDifficulties = ['easy', 'medium', 'hard', 'easy'];
 
         for (let laneIndex = 0; laneIndex < LANES.length; laneIndex++) {
             for (let slotIndex = 0; slotIndex < TOWER_SLOTS_X.length; slotIndex++) {
                 const x = TOWER_SLOTS_X[slotIndex];
                 const y = LANES[laneIndex];
 
-                // Create invisible interactive zone
-                const zone = this.add.zone(x, y, TOWER.size + 10, TOWER.size + 10)
-                    .setInteractive({ useHandCursor: true });
+                // Rotate the difficulty pattern per lane for variety
+                const difficultyIndex = (slotIndex + laneIndex) % slotDifficulties.length;
+                const difficulty = slotDifficulties[difficultyIndex];
 
-                zone.laneIndex = laneIndex;
-                zone.slotIndex = slotIndex;
-                zone.difficultyIndex = 0; // Start with no tower
+                // Create tower slot with maths problem
+                const towerSlot = new TowerSlot(this, x, y, laneIndex, slotIndex, difficulty);
+                const problem = this.mathsManager.generateProblemForDifficulty(difficulty);
+                towerSlot.setProblem(problem);
 
-                zone.on('pointerdown', () => {
-                    // Cycle through difficulties
-                    zone.difficultyIndex = (zone.difficultyIndex + 1) % difficulties.length;
-                    const difficulty = difficulties[zone.difficultyIndex];
-
-                    // Remove existing tower if any
-                    const existingTower = this.slots[zone.laneIndex][zone.slotIndex];
-                    if (existingTower) {
-                        existingTower.destroy();
-                        this.slots[zone.laneIndex][zone.slotIndex] = null;
-                    }
-
-                    // Create new tower if not empty
-                    if (difficulty) {
-                        const tower = new Tower(this, x, y, zone.laneIndex, zone.slotIndex, difficulty);
-                        const problem = this.mathsManager.generateProblemForDifficulty(difficulty);
-                        tower.setProblem(problem);
-                        this.towers.add(tower);
-                        this.slots[zone.laneIndex][zone.slotIndex] = tower;
-                    }
-                });
+                this.towerSlots[laneIndex][slotIndex] = towerSlot;
             }
         }
     }
@@ -149,7 +131,7 @@ export default class GameScene extends Phaser.Scene {
 
     update(time, delta) {
         // Update tower cooldowns and fire
-        const towers = this.towers.getChildren().slice(); // Copy to avoid issues
+        const towers = this.towers.getChildren().slice();
         for (const tower of towers) {
             if (tower && tower.active) {
                 tower.updateCooldown(delta);
@@ -161,8 +143,11 @@ export default class GameScene extends Phaser.Scene {
             }
         }
 
+        // Check projectile-monster collisions manually
+        this.checkProjectileMonsterCollisions();
+
         // Check if any monster reached the left edge
-        const monsters = this.monsters.getChildren().slice(); // Copy to avoid issues
+        const monsters = this.monsters.getChildren().slice();
         for (const monster of monsters) {
             if (monster && monster.active && monster.x < 0) {
                 this.lives--;
@@ -171,13 +156,34 @@ export default class GameScene extends Phaser.Scene {
                 // Check for game over
                 if (this.lives <= 0) {
                     this.gameOver();
-                    return; // Exit early if game over
+                    return;
                 }
             }
         }
 
         // Update HUD
         this.hud.update(this.score, this.lives);
+    }
+
+    checkProjectileMonsterCollisions() {
+        const projectiles = this.projectiles.getChildren();
+        const monsters = this.monsters.getChildren();
+
+        for (const projectile of projectiles) {
+            if (!projectile || !projectile.active || !projectile.body) continue;
+
+            for (const monster of monsters) {
+                if (!monster || !monster.active || !monster.body) continue;
+
+                // Check if bodies overlap using Phaser's built-in check
+                if (Phaser.Geom.Intersects.RectangleToRectangle(
+                    projectile.getBounds(),
+                    monster.getBounds()
+                )) {
+                    this.handleProjectileMonsterCollision(projectile, monster);
+                }
+            }
+        }
     }
 
     gameOver() {
@@ -214,47 +220,44 @@ export default class GameScene extends Phaser.Scene {
     }
 
     handleProjectileMonsterCollision(projectile, monster) {
-        try {
-            // Safety check - ensure both objects are still valid and have expected methods
-            if (!projectile || !projectile.active || !projectile.body) {
-                console.log('Projectile invalid or inactive');
-                return;
-            }
-            if (!monster || !monster.active) {
-                console.log('Monster invalid or inactive');
-                return;
-            }
+        // Safety checks
+        if (!projectile.active || !monster.active) return;
 
-            // Verify the objects are actual instances of our classes
-            if (typeof projectile.onBounce !== 'function') {
-                console.error('projectile.onBounce is not a function. projectile:', projectile);
-                console.error('projectile constructor:', projectile.constructor?.name);
-                return;
-            }
-            if (typeof monster.takeDamage !== 'function') {
-                console.error('monster.takeDamage is not a function. monster:', monster);
-                return;
-            }
+        // Prevent multiple triggers for the same collision
+        const now = this.time.now;
+        if (projectile.lastBounceTime && now - projectile.lastBounceTime < 150) {
+            return;
+        }
+        projectile.lastBounceTime = now;
 
-            // Check if difficulties match
-            if (projectile.difficulty === monster.difficulty) {
-                // Same difficulty: deal damage, normal elastic bounce (handled by physics)
-                const died = monster.takeDamage(1);
-                projectile.onBounce();
-
-                // Award points if monster died
-                if (died) {
-                    this.score += POINTS[monster.difficulty];
-                }
-            } else {
-                // Different difficulty: no damage, invert y-velocity only (deflect vertically)
-                if (projectile.body) {
-                    projectile.body.velocity.y *= -1;
-                }
-                projectile.onBounce();
+        // Check difficulty logic
+        if (projectile.difficulty === monster.difficulty) {
+            const died = monster.takeDamage(1);
+            if (died) {
+                this.score += POINTS[monster.difficulty];
             }
-        } catch (e) {
-            console.error('Error in handleProjectileMonsterCollision:', e);
+        }
+
+        // Bounce the projectile off the monster
+        // Determine bounce direction based on relative position
+        const dx = projectile.x - monster.x;
+        const dy = projectile.y - monster.y;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Hit from left or right - reverse X velocity
+            projectile.body.velocity.x *= -1;
+            // Push projectile away to prevent re-collision
+            projectile.x += dx > 0 ? 5 : -5;
+        } else {
+            // Hit from top or bottom - reverse Y velocity
+            projectile.body.velocity.y *= -1;
+            // Push projectile away to prevent re-collision
+            projectile.y += dy > 0 ? 5 : -5;
+        }
+
+        // Register the bounce for projectile lifespan
+        if (projectile.onBounce) {
+            projectile.onBounce();
         }
     }
 
@@ -262,8 +265,53 @@ export default class GameScene extends Phaser.Scene {
         console.log('Answer submitted:', answer);
         let anyCorrect = false;
 
-        // Check answer against all towers
-        const towers = this.towers.getChildren().slice(); // Copy array to avoid mutation issues
+        // First, check answer against tower slots (to spawn new towers)
+        for (let laneIndex = 0; laneIndex < LANES.length; laneIndex++) {
+            for (let slotIndex = 0; slotIndex < TOWER_SLOTS_X.length; slotIndex++) {
+                const towerSlot = this.towerSlots[laneIndex][slotIndex];
+
+                if (towerSlot && towerSlot.problem) {
+                    const isCorrect = this.mathsManager.checkAnswer(towerSlot.problem, answer);
+
+                    if (isCorrect) {
+                        anyCorrect = true;
+
+                        const x = TOWER_SLOTS_X[slotIndex];
+                        const y = LANES[laneIndex];
+                        const difficulty = towerSlot.difficulty;
+
+                        // Destroy the tower slot
+                        towerSlot.destroy();
+                        this.towerSlots[laneIndex][slotIndex] = null;
+
+                        // Create the actual tower (already active)
+                        const tower = new Tower(this, x, y, laneIndex, slotIndex, difficulty);
+                        tower.activate(); // Tower starts active immediately
+
+                        // Assign a new problem to the tower
+                        const newProblem = this.mathsManager.generateProblemForDifficulty(difficulty);
+                        tower.setProblem(newProblem);
+
+                        this.towers.add(tower);
+                        this.slots[laneIndex][slotIndex] = tower;
+
+                        console.log('Tower spawned at lane', laneIndex, 'slot', slotIndex);
+
+                        // Visual feedback
+                        this.tweens.add({
+                            targets: tower,
+                            scaleX: 1.3,
+                            scaleY: 1.3,
+                            duration: 100,
+                            yoyo: true
+                        });
+                    }
+                }
+            }
+        }
+
+        // Then, check answer against existing towers (to boost fire rate)
+        const towers = this.towers.getChildren().slice();
         console.log('Checking against', towers.length, 'towers');
 
         for (const tower of towers) {
@@ -276,12 +324,6 @@ export default class GameScene extends Phaser.Scene {
                     if (isCorrect) {
                         anyCorrect = true;
 
-                        // Activate tower if not already active
-                        if (!tower.isActive) {
-                            console.log('Activating tower');
-                            tower.activate();
-                        }
-
                         // Increase fire rate
                         tower.increaseFireRate();
 
@@ -290,7 +332,7 @@ export default class GameScene extends Phaser.Scene {
                         tower.setProblem(newProblem);
                         console.log('New problem assigned:', newProblem.expression);
 
-                        // Visual feedback - pulse effect on the problem text instead
+                        // Visual feedback - pulse effect on the problem text
                         this.tweens.add({
                             targets: tower.problemText,
                             scaleX: 1.3,

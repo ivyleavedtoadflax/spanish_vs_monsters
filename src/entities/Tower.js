@@ -21,7 +21,8 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         // Set appearance
         this.setTint(COLORS[difficulty]);
         this.setDisplaySize(TOWER.size, TOWER.size);
-        this.setAlpha(0.5); // Dimmed when inactive
+        // Tower starts invisible until activate() is called
+        this.setAlpha(1);
 
         // Create problem text display
         this.problemText = scene.add.text(x, y, '', {

@@ -19,17 +19,26 @@ export default class WaveManager {
             callbackScope: this,
             loop: true
         });
+
+        // Spawn first monster immediately for testing
+        this.spawnRandomMonster();
     }
 
     spawnMonster(lane, difficulty) {
-        const monster = new Monster(
-            this.scene,
-            CANVAS_WIDTH + 20, // Spawn just off right edge
-            lane,
-            difficulty
-        );
-        this.scene.monsters.add(monster);
-        return monster;
+        try {
+            const monster = new Monster(
+                this.scene,
+                CANVAS_WIDTH + 20, // Spawn just off right edge
+                lane,
+                difficulty
+            );
+            this.scene.monsters.add(monster);
+            console.log('Monster spawned:', difficulty, 'at lane', lane, 'total monsters:', this.scene.monsters.getChildren().length);
+            return monster;
+        } catch (e) {
+            console.error('Error spawning monster:', e);
+            return null;
+        }
     }
 
     spawnRandomMonster() {
