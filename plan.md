@@ -96,7 +96,7 @@ maths_vs_monsters/
 
 ### Phase 1: Project Setup
 
-#### Step 1.1: Initialize Vite project
+#### Step 1.1: Initialize Vite project:   ✅ DONE
 **Goal**: Empty Vite project runs in browser
 
 **Actions**:
@@ -106,9 +106,11 @@ maths_vs_monsters/
 
 **Verify**: Browser shows Vite default page at `localhost:5173`
 
+
+
 ---
 
-#### Step 1.2: Install dependencies
+#### Step 1.2: Install dependencies ✅ DONE
 **Goal**: Phaser and maths library installed
 
 **Actions**:
@@ -118,7 +120,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 1.3: Create Phaser game shell
+#### Step 1.3: Create Phaser game shell ✅ DONE
 **Goal**: Empty Phaser game renders a coloured background
 
 **Actions**:
@@ -136,7 +138,7 @@ maths_vs_monsters/
 
 ### Phase 2: Core Game Scene
 
-#### Step 2.1: Create config file with lane definitions
+#### Step 2.1: Create config file with lane definitions ✅ DONE
 **Goal**: Central config for game constants
 
 **Actions**:
@@ -150,7 +152,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 2.2: Draw lane grid
+#### Step 2.2: Draw lane grid ✅ DONE
 **Goal**: Visual grid showing lanes and tower slots
 
 **Actions**:
@@ -163,7 +165,7 @@ maths_vs_monsters/
 
 ### Phase 3: Monster System
 
-#### Step 3.1: Create static monster
+#### Step 3.1: Create static monster ✅ DONE
 **Goal**: Single coloured square appears on screen
 
 **Actions**:
@@ -179,7 +181,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 3.2: Monster movement
+#### Step 3.2: Monster movement ✅ DONE
 **Goal**: Monster moves left across screen
 
 **Actions**:
@@ -190,7 +192,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 3.3: Monster reaches base (game over condition)
+#### Step 3.3: Monster reaches base (game over condition) ✅ DONE
 **Goal**: Detect when monster reaches left edge
 
 **Actions**:
@@ -202,7 +204,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 3.4: Monster group and spawning
+#### Step 3.4: Monster group and spawning ✅ DONE
 **Goal**: Multiple monsters spawn over time
 
 **Actions**:
@@ -214,7 +216,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 3.5: Monster health and visual feedback
+#### Step 3.5: Monster health and visual feedback ✅ DONE
 **Goal**: Monsters have health that can be reduced
 
 **Actions**:
@@ -227,7 +229,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 3.6: Monster difficulty tiers
+#### Step 3.6: Monster difficulty tiers ✅ DONE
 **Goal**: Easy/medium/hard monsters with different colours
 
 **Actions**:
@@ -242,7 +244,7 @@ maths_vs_monsters/
 
 ### Phase 4: Tower System
 
-#### Step 4.1: Create static tower
+#### Step 4.1: Create static tower ✅ DONE
 **Goal**: Single tower circle appears in a slot
 
 **Actions**:
@@ -257,7 +259,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 4.2: Tower placement UI
+#### Step 4.2: Tower placement UI ✅ DONE
 **Goal**: Click empty slot to place tower
 
 **Actions**:
@@ -269,7 +271,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 4.3: Tower stores maths problem
+#### Step 4.3: Tower stores maths problem ✅ DONE
 **Goal**: Each tower has a current problem
 
 **Actions**:
@@ -283,7 +285,7 @@ maths_vs_monsters/
 
 ### Phase 5: Projectile System
 
-#### Step 5.1: Create projectile
+#### Step 5.1: Create projectile ✅ DONE
 **Goal**: Ball appears and moves
 
 **Actions**:
@@ -297,7 +299,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 5.2: Projectile bouncing
+#### Step 5.2: Projectile bouncing ✅ DONE
 **Goal**: Ball bounces off world bounds
 
 **Actions**:
@@ -309,7 +311,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 5.3: Projectile-monster collision
+#### Step 5.3: Projectile-monster collision ✅ DONE
 **Goal**: Ball bounces off monsters and deals damage
 
 **Actions**:
@@ -321,7 +323,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 5.4: Projectile lifespan
+#### Step 5.4: Projectile lifespan ✅ DONE
 **Goal**: Balls despawn after max bounces or time
 
 **Actions**:
@@ -333,7 +335,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 5.5: Difficulty matching
+#### Step 5.5: Difficulty matching ✅ DONE
 **Goal**: Balls only damage same-difficulty monsters
 
 **Actions**:
@@ -349,7 +351,7 @@ maths_vs_monsters/
 
 ### Phase 6: Tower Shooting
 
-#### Step 6.1: Tower fires projectile
+#### Step 6.1: Tower fires projectile ✅ DONE
 **Goal**: Active tower periodically shoots
 
 **Actions**:
@@ -363,7 +365,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 6.2: Tower targets lane
+#### Step 6.2: Tower targets lane ✅ DONE
 **Goal**: Projectiles aim toward monsters in same lane
 
 **Actions**:
@@ -376,7 +378,7 @@ maths_vs_monsters/
 
 ### Phase 7: Maths Integration
 
-#### Step 7.1: Persistent input box UI
+#### Step 7.1: Persistent input box UI ✅ DONE
 **Goal**: Single input field always visible for answering any tower's problem
 
 **Actions**:
@@ -394,7 +396,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 7.2: Answer validation across all towers
+#### Step 7.2: Answer validation across all towers ✅ DONE
 **Goal**: Submitting answer checks against ALL tower problems
 
 **Actions**:
@@ -411,7 +413,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 7.3: Fire rate boost
+#### Step 7.3: Fire rate boost ✅ DONE
 **Goal**: Solving more problems increases fire rate
 
 **Actions**:
@@ -427,7 +429,7 @@ maths_vs_monsters/
 
 ### Phase 8: Game State
 
-#### Step 8.1: Lives and game over
+#### Step 8.1: Lives and game over ✅ DONE
 **Goal**: Track lives, end game at 0
 
 **Actions**:
@@ -439,7 +441,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 8.2: Score
+#### Step 8.2: Score ✅ DONE
 **Goal**: Earn points for killing monsters
 
 **Actions**:
@@ -451,7 +453,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 8.3: HUD display
+#### Step 8.3: HUD display ✅ DONE
 **Goal**: Show score and lives on screen
 
 **Actions**:
@@ -465,7 +467,7 @@ maths_vs_monsters/
 
 ### Phase 9: Menus and Flow
 
-#### Step 9.1: Menu scene with HTML difficulty selector
+#### Step 9.1: Menu scene with HTML difficulty selector ✅ DONE
 **Goal**: Start screen with year level selection
 
 **Actions**:
@@ -483,7 +485,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 9.2: Difficulty mapping
+#### Step 9.2: Difficulty mapping ✅ DONE
 **Goal**: Base year affects problem difficulty
 
 **Actions**:
@@ -497,7 +499,7 @@ maths_vs_monsters/
 
 ---
 
-#### Step 9.3: Game over scene
+#### Step 9.3: Game over scene ✅ DONE
 **Goal**: Show final score, restart option
 
 **Actions**:
@@ -511,7 +513,7 @@ maths_vs_monsters/
 
 ### Phase 10: Polish
 
-#### Step 10.1: Wave progression
+#### Step 10.1: Wave progression ✅ DONE
 **Goal**: Difficulty increases over time
 
 **Actions**:
