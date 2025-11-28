@@ -103,3 +103,28 @@ inputElement.addEventListener('blur', () => {
 - **Phaser keyboard re-enabled** on input blur → returns control to game
 - Canvas click refocuses the game area
 - In-game input (`UIScene.js`) uses Phaser's native `this.input.keyboard.on('keydown', ...)` which only fires when enabled
+
+
+--
+
+One Critical Advice: Hitboxes vs. Textures
+Currently, your code relies on the generated texture size for physics:
+BootScene creates a 40x40 rectangle.
+Monster physics body defaults to the texture size (40x40).
+The Trap: When you load a real PNG, it might be 128x128 pixels (for high resolution).
+If you just render it, it will look huge.
+If you use this.setDisplaySize(40, 40), it looks small, but the Physics Body might stay at 128x128 depending on when physics was enabled.
+The Fix:
+Always refresh the body after scaling in the constructor:
+code
+JavaScript
+// In Monster.js constructor
+this.setDisplaySize(40, 40); // Visual scale
+this.refreshBody();          // Resizes physics box to match new visual scale
+Or, if the sprite has a lot of transparent whitespace (padding), set the body size manually:
+code
+JavaScript
+// Visual is 40x40, but hitbox is smaller to be forgiving
+this.body.setSize(30, 30);
+this.body.setOffset(5, 5); // Center the hitbox
+Summary

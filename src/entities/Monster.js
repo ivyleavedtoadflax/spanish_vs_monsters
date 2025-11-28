@@ -3,7 +3,8 @@ import { MONSTER, COLORS } from '../config.js';
 
 export default class Monster extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, difficulty = 'easy') {
-        super(scene, x, y, 'pixel');
+        // Use the properly-sized monster texture
+        super(scene, x, y, 'monster');
 
         this.difficulty = difficulty;
         this.maxHealth = MONSTER.health[difficulty];
@@ -13,12 +14,14 @@ export default class Monster extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        // Set appearance
-        this.setTint(COLORS[difficulty]);
-        this.setDisplaySize(MONSTER.size, MONSTER.size);
+        // Set immovable so projectiles bounce off without pushing the monster
+        this.body.setImmovable(true);
 
-        // Set up physics body
-        this.body.setSize(MONSTER.size, MONSTER.size);
+        // Set appearance - just tint, no scaling needed
+        this.setTint(COLORS[difficulty]);
+
+        // Body is automatically sized to texture (MONSTER.size x MONSTER.size)
+        // No setSize or setOffset needed!
 
         // Set movement - move left toward base
         this.body.setVelocityX(-MONSTER.speed);

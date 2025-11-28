@@ -67,8 +67,15 @@ export default class GameScene extends Phaser.Scene {
             }
         });
 
-        // Note: Collision detection is done manually in update()
-        // because physics groups interfere with our custom sprite classes
+        // Register the collision handler - works with standard groups as long as children have physics bodies
+        // The engine handles spatial optimization (QuadTree) and proper bounce/separation
+        this.physics.add.collider(
+            this.projectiles,
+            this.monsters,
+            this.handleProjectileMonsterCollision,
+            null,
+            this
+        );
 
         // Create input box at bottom of screen
         this.inputBox = new InputBox(this, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 40);
@@ -143,8 +150,7 @@ export default class GameScene extends Phaser.Scene {
             }
         }
 
-        // Check projectile-monster collisions manually
-        this.checkProjectileMonsterCollisions();
+        // Collision detection is handled by physics.add.collider (registered in create)
 
         // Check if any monster reached the left edge
         const monsters = this.monsters.getChildren().slice();
@@ -163,27 +169,6 @@ export default class GameScene extends Phaser.Scene {
 
         // Update HUD
         this.hud.update(this.score, this.lives);
-    }
-
-    checkProjectileMonsterCollisions() {
-        const projectiles = this.projectiles.getChildren();
-        const monsters = this.monsters.getChildren();
-
-        for (const projectile of projectiles) {
-            if (!projectile || !projectile.active || !projectile.body) continue;
-
-            for (const monster of monsters) {
-                if (!monster || !monster.active || !monster.body) continue;
-
-                // Check if bodies overlap using Phaser's built-in check
-                if (Phaser.Geom.Intersects.RectangleToRectangle(
-                    projectile.getBounds(),
-                    monster.getBounds()
-                )) {
-                    this.handleProjectileMonsterCollision(projectile, monster);
-                }
-            }
-        }
     }
 
     gameOver() {
@@ -220,39 +205,30 @@ export default class GameScene extends Phaser.Scene {
     }
 
     handleProjectileMonsterCollision(projectile, monster) {
+        // DEBUG: Log collision
+        console.log('COLLISION!', projectile.difficulty, 'projectile hit', monster.difficulty, 'monster');
+
+        // Arcade Physics has already calculated the bounce and separation!
+        // We just need to handle the game logic.
+
         // Safety checks
         if (!projectile.active || !monster.active) return;
 
-        // Prevent multiple triggers for the same collision
-        const now = this.time.now;
-        if (projectile.lastBounceTime && now - projectile.lastBounceTime < 150) {
-            return;
-        }
-        projectile.lastBounceTime = now;
+        // Prevent multiple hits for the same projectile-monster pair (debounce)
+        if (projectile.lastHitMonster === monster) return;
+        projectile.lastHitMonster = monster;
 
-        // Check difficulty logic
+        // Clear the ref after a short time so it can hit the same monster again if it bounces back
+        this.time.delayedCall(500, () => {
+            if (projectile.active) projectile.lastHitMonster = null;
+        });
+
+        // Check difficulty logic - only matching difficulties deal damage
         if (projectile.difficulty === monster.difficulty) {
             const died = monster.takeDamage(1);
             if (died) {
                 this.score += POINTS[monster.difficulty];
             }
-        }
-
-        // Bounce the projectile off the monster
-        // Determine bounce direction based on relative position
-        const dx = projectile.x - monster.x;
-        const dy = projectile.y - monster.y;
-
-        if (Math.abs(dx) > Math.abs(dy)) {
-            // Hit from left or right - reverse X velocity
-            projectile.body.velocity.x *= -1;
-            // Push projectile away to prevent re-collision
-            projectile.x += dx > 0 ? 5 : -5;
-        } else {
-            // Hit from top or bottom - reverse Y velocity
-            projectile.body.velocity.y *= -1;
-            // Push projectile away to prevent re-collision
-            projectile.y += dy > 0 ? 5 : -5;
         }
 
         // Register the bounce for projectile lifespan
