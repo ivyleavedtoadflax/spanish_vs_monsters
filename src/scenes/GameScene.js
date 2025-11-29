@@ -225,15 +225,19 @@ export default class GameScene extends Phaser.Scene {
 
         // Check difficulty logic - only matching difficulties deal damage
         if (projectile.difficulty === monster.difficulty) {
+            // Same type: inflict damage and destroy projectile
             const died = monster.takeDamage(1);
             if (died) {
                 this.score += POINTS[monster.difficulty];
             }
-        }
-
-        // Register the bounce for projectile lifespan
-        if (projectile.onBounce) {
-            projectile.onBounce();
+            // Projectile disappears on successful hit
+            projectile.destroy();
+        } else {
+            // Different type: projectile bounces off (physics already handled)
+            // Register the bounce for projectile lifespan
+            if (projectile.onBounce) {
+                projectile.onBounce();
+            }
         }
     }
 
