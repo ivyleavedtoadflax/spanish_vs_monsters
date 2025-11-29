@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import { TOWER, COLORS } from '../config.js';
+import { TOWER } from '../config.js';
 
 export default class Tower extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, lane, slotIndex, difficulty = 'easy') {
-        super(scene, x, y, 'pixel');
+        // Use the sprite for this difficulty level
+        super(scene, x, y, `turret_${difficulty}`);
 
         this.difficulty = difficulty;
         this.lane = lane;
@@ -18,8 +19,7 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this, true); // true = static body
 
-        // Set appearance
-        this.setTint(COLORS[difficulty]);
+        // Scale sprite to match expected tower size
         this.setDisplaySize(TOWER.size, TOWER.size);
         // Tower starts invisible until activate() is called
         this.setAlpha(1);
