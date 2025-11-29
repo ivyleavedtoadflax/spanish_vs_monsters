@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, LANES, WAVE } from '../config.js';
+import { CANVAS_WIDTH, GAME_AREA_HEIGHT, LANES, WAVE } from '../config.js';
 import Monster from '../entities/Monster.js';
 
 export default class WaveManager {
@@ -187,7 +187,7 @@ export default class WaveManager {
     }
 
     showWaveNotification() {
-        const text = this.scene.add.text(400, 300, `Wave ${this.waveNumber}`, {
+        const text = this.scene.add.text(CANVAS_WIDTH / 2, GAME_AREA_HEIGHT / 2, `Wave ${this.waveNumber}`, {
             fontSize: '48px',
             fontFamily: 'Arial',
             color: '#ffffff',

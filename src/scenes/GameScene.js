@@ -83,8 +83,8 @@ export default class GameScene extends Phaser.Scene {
         // Listen for answer submissions
         this.events.on('answerSubmitted', this.handleAnswerSubmit, this);
 
-        // Create HUD
-        this.hud = new HUD(this, 10, 10);
+        // Create HUD in the input area (bottom left)
+        this.hud = new HUD(this, 10, GAME_AREA_HEIGHT + 10);
     }
 
     createTowerSlots() {

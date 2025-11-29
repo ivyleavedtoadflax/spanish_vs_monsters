@@ -1,5 +1,5 @@
 // Canvas dimensions
-export const CANVAS_WIDTH = 1600;
+export const CANVAS_WIDTH = 1200;
 export const GAME_AREA_HEIGHT = 600;  // Height of the playable game area (where projectiles bounce)
 export const INPUT_AREA_HEIGHT = 80;  // Height reserved for input box below game area
 export const CANVAS_HEIGHT = GAME_AREA_HEIGHT + INPUT_AREA_HEIGHT;  // Total canvas height
@@ -35,7 +35,7 @@ export const COLORS = {
 // Monster settings
 export const MONSTER = {
     size: 40,
-    speed: 50,
+    speed: 30,
     health: {
         easy: 1,
         medium: 4,
