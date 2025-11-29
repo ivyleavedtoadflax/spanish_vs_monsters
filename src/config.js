@@ -135,8 +135,8 @@ export const WAVE = {
 
     // Spawn rate as percentage of total wave monsters per second
     // e.g., 0.05 = 5% of wave spawns per second at start
-    spawnRateStart: 0.05,           // Slow spawn rate at wave start (5% per second)
-    spawnRateEnd: 0.25,             // Fast spawn rate at wave end (25% per second)
+    spawnRateStart: 0.01,           // Slow spawn rate at wave start (5% per second)
+    spawnRateEnd: 0.05,             // Fast spawn rate at wave end (25% per second)
 
     // Difficulty distribution at start of wave [easy, medium, hard]
     difficultyStart: [0.9, 0.08, 0.02],
