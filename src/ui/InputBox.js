@@ -39,7 +39,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
         });
 
         // Create submit hint
-        this.hint = scene.add.text(0, 25, 'Type answer & press Enter', {
+        this.hint = scene.add.text(0, 32, 'Type answer & press Enter', {
             fontSize: '12px',
             fontFamily: 'Arial',
             color: '#888899'
