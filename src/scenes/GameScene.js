@@ -59,13 +59,8 @@ export default class GameScene extends Phaser.Scene {
         // Create wave manager to spawn monsters
         this.waveManager = new WaveManager(this);
 
-        // Set up world bounds for projectile bouncing
+        // Set up world bounds (used for reference, projectiles handle their own bouncing)
         this.physics.world.setBounds(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        this.physics.world.on('worldbounds', (body) => {
-            if (body.gameObject && body.gameObject.onBounce) {
-                body.gameObject.onBounce();
-            }
-        });
 
         // Register the collision handler - works with standard groups as long as children have physics bodies
         // The engine handles spatial optimization (QuadTree) and proper bounce/separation

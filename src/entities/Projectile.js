@@ -21,10 +21,10 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
         // Make it a circle for better bounce physics
         this.body.setCircle(PROJECTILE.size / 2);
 
-        // Enable world bounds collision and bouncing (top/bottom only)
-        this.body.setCollideWorldBounds(true);
+        // Don't use world bounds - we'll handle top/bottom bouncing manually
+        // This allows projectiles to fly off left/right edges
+        this.body.setCollideWorldBounds(false);
         this.body.setBounce(1, 1);
-        this.body.onWorldBounds = true;
 
         // Set initial velocity
         this.body.setVelocity(velocityX, velocityY);
@@ -42,8 +42,25 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
 
-        // Destroy if off-screen (left/right edges since we don't bounce there)
-        if (this.active && (this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50)) {
+        if (!this.active || !this.body) return;
+
+        const radius = PROJECTILE.size / 2;
+
+        // Manual top/bottom boundary bouncing
+        if (this.y - radius <= 0) {
+            // Hit top edge
+            this.y = radius;
+            this.body.velocity.y = Math.abs(this.body.velocity.y);
+            this.onBounce();
+        } else if (this.y + radius >= CANVAS_HEIGHT) {
+            // Hit bottom edge
+            this.y = CANVAS_HEIGHT - radius;
+            this.body.velocity.y = -Math.abs(this.body.velocity.y);
+            this.onBounce();
+        }
+
+        // Destroy if off-screen left/right (they fly through these edges)
+        if (this.x < -50 || this.x > CANVAS_WIDTH + 50) {
             this.destroy();
         }
     }

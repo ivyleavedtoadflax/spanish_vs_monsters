@@ -13,7 +13,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: true  // Enable to visualize physics bodies
+      debug: false  // Enable to visualize physics bodies
     }
   },
   scene: [BootScene, MenuScene, GameScene, GameOverScene]
