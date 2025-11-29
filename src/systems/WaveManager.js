@@ -31,6 +31,9 @@ export default class WaveManager {
      * Calculate spawn interval based on wave progress.
      * Spawn rate increases from spawnRateStart to spawnRateEnd as wave progresses.
      * Rate is specified as % of total wave monsters per second.
+     * e.g., 0.05 = 5% means 5% of wave spawns per second
+     * With 20 monsters at 5%, that's 1 monster/second (1000ms interval)
+     * With 20 monsters at 25%, that's 5 monsters/second (200ms interval)
      */
     getSpawnInterval() {
         const progress = this.monstersSpawned / this.monstersPerWave;
@@ -38,12 +41,12 @@ export default class WaveManager {
         // Linearly interpolate spawn rate from start to end
         const currentRate = WAVE.spawnRateStart + progress * (WAVE.spawnRateEnd - WAVE.spawnRateStart);
 
-        // Convert rate (monsters per second as fraction of total) to interval in ms
-        // rate = monstersPerSecond / totalMonsters
         // monstersPerSecond = rate * totalMonsters
         // interval = 1000 / monstersPerSecond
         const monstersPerSecond = currentRate * this.monstersPerWave;
         const interval = 1000 / monstersPerSecond;
+
+        console.log(`Spawn interval: progress=${(progress * 100).toFixed(1)}%, rate=${(currentRate * 100).toFixed(1)}%, monsters/sec=${monstersPerSecond.toFixed(2)}, interval=${interval.toFixed(0)}ms`);
 
         // Clamp to reasonable bounds (min 200ms, max 10s)
         return Math.max(200, Math.min(10000, interval));

@@ -130,7 +130,7 @@ export const GAME = {
 
 // Wave configuration
 export const WAVE = {
-    startingMonsters: 20,           // Number of monsters in wave 1
+    startingMonsters: 30,           // Number of monsters in wave 1
     additionalMonstersPerWave: 5,   // How many more monsters each subsequent wave
 
     // Spawn rate as percentage of total wave monsters per second
