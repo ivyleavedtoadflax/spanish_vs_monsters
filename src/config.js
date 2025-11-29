@@ -62,7 +62,7 @@ export const TOWER_CONFIG = {
             projectileSpeed: 300
         },
         projectileConfig: { type: 'bullet' },
-        upgradeDuration: 3000,
+        upgradeDuration: 60000,
         // Explicit upgrade path: 1/n fire rate
         upgrades: [
             { fireRate: 1000 }, // Level 1 (1/2)

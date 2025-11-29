@@ -69,6 +69,11 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         this.isActive = true;
         this.setAlpha(1); // Full opacity when active
         this.cooldown = 0;
+
+        // Start the base tower's lifetime timer
+        // When this expires and there are no upgrades, the tower is removed
+        const expiryTime = this.scene.time.now + this.config.upgradeDuration;
+        this.upgradeTimers.push(expiryTime);
     }
 
     /**
@@ -132,7 +137,7 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         // Process all expired timers
         while (this.upgradeTimers.length > 0 && this.upgradeTimers[0] <= currentTime) {
             this.upgradeTimers.shift(); // Remove expired timer
-            
+
             const stillAlive = this.applyDowngrade();
             if (!stillAlive) {
                 // Tower has no more upgrades and should be removed
