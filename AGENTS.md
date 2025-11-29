@@ -47,11 +47,9 @@ Each monster that spawns corresponds to a problem difficulty.  Easy, medium and 
 
 Monsters have health which depleats as you shoot them.
 
-Each turret has a maths problem on it.  Turrets can kill zombies of their correspondind ficciulty:
-- Easy turrets kill easy monsters
-- Medium turrets kill medium
 
-When you solve the maths problem on a turret it start shoting.  A new problem immediately spawns on the turret.  If solved, the turret shoots faster.
+
+When you solve the maths problem on a turret it start shoting.  A new problem immediately spawns on the turret.
 
 
 ## Getting started
