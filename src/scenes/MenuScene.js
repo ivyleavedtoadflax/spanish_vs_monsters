@@ -158,10 +158,10 @@ export default class MenuScene extends Phaser.Scene {
 
         // Instructions
         this.add.text(CANVAS_WIDTH / 2, 600,
-            'Click slots to place towers • Type answers to activate • Match colors to deal damage', {
+            'Answer maths questions to activate towers.  Answer more questions to powerup towers', {
             fontSize: '14px',
             fontFamily: 'Arial',
-            color: '#666677'
+            color: '#2fff00ff'
         }).setOrigin(0.5);
     }
 

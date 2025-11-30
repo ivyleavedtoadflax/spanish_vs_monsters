@@ -11,13 +11,33 @@ export default class SpreadTower extends Tower {
     }
 
     /**
+     * Calculate spread angle based on projectile count.
+     * Scales linearly from base angle (30°) at 3 projectiles to max (120°) at 10 projectiles.
+     * @param {number} projectileCount - Current number of projectiles
+     * @returns {number} The spread angle in degrees
+     */
+    calculateSpreadAngle(projectileCount) {
+        const minCount = 2;
+        const maxCount = 10;
+        const minAngle = 20;
+        const maxAngle = 120;
+
+        // Clamp projectile count to valid range
+        const clampedCount = Phaser.Math.Clamp(projectileCount, minCount, maxCount);
+
+        // Linear interpolation between min and max angle
+        const t = (clampedCount - minCount) / (maxCount - minCount);
+        return minAngle + t * (maxAngle - minAngle);
+    }
+
+    /**
      * Fire multiple projectiles in a spread pattern.
      * @param {Phaser.Scene} scene - The game scene
      */
     fire(scene) {
         const config = this.getProjectileConfig();
         const projectileCount = this.stats.projectileCount || 3;
-        const spreadAngle = this.stats.spreadAngle || 30;
+        const spreadAngle = this.calculateSpreadAngle(projectileCount);
         const speed = config.projectileSpeed;
 
         // Calculate angle step between projectiles

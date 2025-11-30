@@ -80,7 +80,7 @@ export const TOWER_CONFIG = {
         baseStats: {
             damage: 2,
             fireRate: 2000,
-            projectileCount: 3, // Initial spread count
+            projectileCount: 2, // Initial spread count
             spreadAngle: 30,
             projectileSpeed: 300,
             range: 1000
@@ -89,6 +89,7 @@ export const TOWER_CONFIG = {
         upgradeDuration: 600000,
         // Explicit upgrade path: +1 projectile count per level
         upgrades: [
+            { projectileCount: 3 },
             { projectileCount: 4 },
             { projectileCount: 5 },
             { projectileCount: 6 },
