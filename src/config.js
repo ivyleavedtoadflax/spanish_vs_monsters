@@ -137,11 +137,11 @@ export const TOWER_CONFIG = {
         upgradeDuration: 600000,
         // Explicit upgrade path: Increase cluster count
         upgrades: [
-            { clusterCount: 8 },
-            { clusterCount: 10 },
+            { clusterCount: 9 },
             { clusterCount: 12 },
-            { clusterCount: 14 },
-            { clusterCount: 16 }
+            { clusterCount: 15 },
+            { clusterCount: 18 },
+            { clusterCount: 21 }
         ]
     }
 };

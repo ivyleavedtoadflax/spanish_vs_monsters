@@ -18,7 +18,7 @@ export default class ClusterTower extends Tower {
     fire(scene) {
         const config = this.getProjectileConfig();
         const velocityX = config.projectileSpeed;
-        const velocityY = Phaser.Math.Between(-20, 20); // Slight random spread
+        const velocityY = 0; // Shoot perfectly horizontally
 
         const projectile = createProjectile(
             scene,
