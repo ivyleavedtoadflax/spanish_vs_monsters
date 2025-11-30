@@ -47,23 +47,39 @@ export default class BootScene extends Phaser.Scene {
         this.load.audio('monster_hurt', 'assets/monsters/ow_hurt.mp3');
         this.load.audio('monster_death', 'assets/monsters/ow_death.mp3');
 
-        // Load theme music
-        this.load.audio('theme_music', 'assets/music/theme.mp3');
+        // Note: theme music is loaded in the background after scene starts
     }
 
     create() {
-        // Create theme music instance and store in registry for cross-scene access
-        const music = this.sound.add('theme_music', {
-            loop: true,
-            volume: 0.5
+        // Launch the menu scene (runs in parallel, BootScene stays active for background loading)
+        this.scene.launch('MenuScene');
+
+        // Load theme music in the background while MenuScene is already visible
+        this.loadMusicInBackground();
+    }
+
+    loadMusicInBackground() {
+        // Use Phaser's loader to load the music file in the background
+        this.load.audio('theme_music', 'assets/music/theme.mp3');
+
+        // When the music finishes loading, create and start it
+        this.load.once('complete', () => {
+            const music = this.sound.add('theme_music', {
+                loop: true,
+                volume: 0.5
+            });
+            this.registry.set('themeMusic', music);
+
+            // Start music if enabled
+            if (this.registry.get('musicEnabled')) {
+                music.play();
+            }
+
+            // Now we can stop this scene as music is loaded
+            this.scene.stop('BootScene');
         });
-        this.registry.set('themeMusic', music);
 
-        // Start music if enabled
-        if (this.registry.get('musicEnabled')) {
-            music.play();
-        }
-
-        this.scene.start('MenuScene');
+        // Start the background load
+        this.load.start();
     }
 }
