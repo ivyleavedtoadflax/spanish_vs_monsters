@@ -10,6 +10,7 @@ const config = {
   width: CANVAS_WIDTH,
   height: CANVAS_HEIGHT,
   parent: 'game',
+  transparent: true,
   physics: {
     default: 'arcade',
     arcade: {

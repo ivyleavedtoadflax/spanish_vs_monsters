@@ -10,8 +10,11 @@ export default class GameOverScene extends Phaser.Scene {
         // Get final score from registry
         const finalScore = this.registry.get('finalScore') || 0;
 
-        // Set dark background
-        this.cameras.main.setBackgroundColor('#1a1a2e');
+        // Create semi-transparent dark overlay with red tint
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x1a0d0d, 0.90);
+        overlay.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        overlay.setDepth(-5);
 
         // Game Over text
         this.add.text(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 3, 'GAME OVER', {

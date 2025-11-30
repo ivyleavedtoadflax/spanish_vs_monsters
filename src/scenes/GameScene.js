@@ -21,8 +21,13 @@ export default class GameScene extends Phaser.Scene {
         // Track visible tower columns (starts with 1 column)
         this.visibleColumns = 1;
 
-        // Set dark blue background
-        this.cameras.main.setBackgroundColor('#1a1a2e');
+        // Create semi-transparent dark overlay to let HTML background show through
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x0d0d1a, 0.9);
+        overlay.fillRect(0, 0, CANVAS_WIDTH, GAME_AREA_HEIGHT);
+        overlay.fillStyle(0x0a0a15, 0.9);
+        overlay.fillRect(0, GAME_AREA_HEIGHT, CANVAS_WIDTH, INPUT_AREA_HEIGHT);
+        overlay.setDepth(-5);
 
         // Get selected year level from registry
         const baseYearLevel = this.registry.get('baseYearLevel') || 'year1';
