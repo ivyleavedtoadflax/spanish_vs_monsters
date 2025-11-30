@@ -10,7 +10,7 @@ export default class HUD extends Phaser.GameObjects.Container {
         scene.add.existing(this);
 
         // Create background panel (horizontal layout for bottom input area)
-        this.background = scene.add.rectangle(0, 0, 240, 60, 0x000000, 0.5);
+        this.background = scene.add.rectangle(0, 0, 400, 60, 0x000000, 0.5);
         this.background.setOrigin(0, 0);
         this.add(this.background);
 
@@ -29,9 +29,33 @@ export default class HUD extends Phaser.GameObjects.Container {
             color: '#ff6666'
         });
         this.add(this.livesText);
+
+        // Create wave info text (second column)
+        this.waveText = scene.add.text(140, 10, 'Wave: 1', {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#88ccff'
+        });
+        this.add(this.waveText);
+
+        // Create monsters remaining text
+        this.monstersText = scene.add.text(140, 35, 'Remaining: 0', {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#ffcc66'
+        });
+        this.add(this.monstersText);
+
+        // Create total kills text (third column)
+        this.killsText = scene.add.text(290, 10, 'Kills: 0', {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#66ff66'
+        });
+        this.add(this.killsText);
     }
 
-    update(score, lives) {
+    update(score, lives, waveInfo = null) {
         this.scoreText.setText(`Score: ${score}`);
         this.livesText.setText(`Lives: ${lives}`);
 
@@ -40,6 +64,13 @@ export default class HUD extends Phaser.GameObjects.Container {
             this.livesText.setColor('#ff3333');
         } else {
             this.livesText.setColor('#ff6666');
+        }
+
+        // Update wave info if provided
+        if (waveInfo) {
+            this.waveText.setText(`Wave: ${waveInfo.wave}`);
+            this.monstersText.setText(`Remaining: ${waveInfo.remaining}`);
+            this.killsText.setText(`Kills: ${waveInfo.totalKills}`);
         }
     }
 }

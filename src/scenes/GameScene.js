@@ -19,6 +19,7 @@ export default class GameScene extends Phaser.Scene {
         // Initialize game state
         this.lives = GAME.startLives;
         this.score = 0;
+        this.totalMonstersKilled = 0;
 
         // Track visible tower columns (starts with 1 column)
         this.visibleColumns = 1;
@@ -287,8 +288,13 @@ export default class GameScene extends Phaser.Scene {
             }
         }
 
-        // Update HUD
-        this.hud.update(this.score, this.lives);
+        // Update HUD with wave info
+        const waveInfo = this.waveManager ? {
+            wave: this.waveManager.waveNumber,
+            remaining: this.waveManager.monstersPerWave - this.waveManager.monstersKilled,
+            totalKills: this.getTotalKills()
+        } : null;
+        this.hud.update(this.score, this.lives, waveInfo);
     }
 
     gameOver() {
@@ -323,6 +329,7 @@ export default class GameScene extends Phaser.Scene {
         const died = monster.takeDamage(damage);
         if (died) {
             this.score += POINTS[monster.difficulty];
+            this.totalMonstersKilled++;
             // Notify wave manager that a monster was killed
             this.waveManager.onMonsterKilled();
         }
@@ -370,6 +377,13 @@ export default class GameScene extends Phaser.Scene {
 
             this.projectiles.add(subProjectile);
         }
+    }
+
+    /**
+     * Get total monsters killed across all waves
+     */
+    getTotalKills() {
+        return this.totalMonstersKilled;
     }
 
     /**
