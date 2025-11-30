@@ -129,19 +129,19 @@ export const TOWER_CONFIG = {
             fireRate: 2500,         // Slower fire rate
             projectileSpeed: 250,   // Slower main projectile
             range: 1000,
-            clusterCount: 5,        // Number of sub-projectiles on explosion
-            clusterDamage: 3,       // Damage per sub-projectile (same as easy turret)
+            clusterCount: 6,        // Number of sub-projectiles on explosion
+            clusterDamage: 2,       // Damage per sub-projectile (same as easy turret)
             clusterSpeed: 300       // Sub-projectile speed (same as easy turret)
         },
         projectileConfig: { type: 'cluster' },
         upgradeDuration: 600000,
         // Explicit upgrade path: Increase cluster count
         upgrades: [
-            { clusterCount: 6 },
-            { clusterCount: 7 },
             { clusterCount: 8 },
-            { clusterCount: 9 },
-            { clusterCount: 10 }
+            { clusterCount: 10 },
+            { clusterCount: 12 },
+            { clusterCount: 14 },
+            { clusterCount: 16 }
         ]
     }
 };
