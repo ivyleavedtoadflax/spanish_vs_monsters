@@ -46,11 +46,105 @@ export default class InputBox extends Phaser.GameObjects.Container {
         }).setOrigin(0.5);
         this.add(this.hint);
 
-        // Set up keyboard input
+        // Create transparent HTML input overlay for mobile keyboard support
+        this.createHtmlInput();
+
+        // Set up keyboard input (for desktop, works alongside HTML input)
         this.setupKeyboardInput();
     }
 
+    createHtmlInput() {
+        this.htmlInput = document.createElement('input');
+        this.htmlInput.type = 'text';
+        this.htmlInput.inputMode = 'decimal';  // Show numeric keyboard with decimal on mobile
+        this.htmlInput.pattern = '[0-9.\\-]*';
+        this.htmlInput.autocomplete = 'off';
+        this.htmlInput.autocorrect = 'off';
+        this.htmlInput.autocapitalize = 'off';
+        this.htmlInput.spellcheck = false;
+        this.htmlInput.maxLength = this.maxLength;
+
+        // Make completely transparent but cover the entire canvas
+        Object.assign(this.htmlInput.style, {
+            position: 'absolute',
+            fontSize: '16px',        // >= 16px to prevent iOS zoom
+            color: 'transparent',
+            backgroundColor: 'transparent',
+            border: 'none',
+            outline: 'none',
+            caretColor: 'transparent',  // Hide the caret too
+            zIndex: '1000',
+            opacity: '0',  // Completely invisible
+            // Will be sized to match canvas in updateInputPosition
+        });
+
+        document.body.appendChild(this.htmlInput);
+
+        // Sync HTML input value changes to Phaser display
+        this.htmlInput.addEventListener('input', () => {
+            // Filter to only allow valid characters
+            let value = this.htmlInput.value;
+
+            // Allow minus only at the start
+            const hasMinus = value.startsWith('-');
+            value = value.replace(/[^0-9.]/g, '');
+
+            // Only allow one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+
+            // Re-add minus if it was at the start
+            if (hasMinus) {
+                value = '-' + value;
+            }
+
+            // Enforce max length
+            if (value.length > this.maxLength) {
+                value = value.slice(0, this.maxLength);
+            }
+
+            this.htmlInput.value = value;
+            this.currentValue = value;
+            this.updateDisplay();
+        });
+
+        // Handle enter key submission
+        this.htmlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.submit();
+            }
+        });
+
+        // Position the input over the canvas
+        this.updateInputPosition();
+        this.scene.scale.on('resize', this.updateInputPosition, this);
+
+        // Also update on window resize (for when browser is resized)
+        window.addEventListener('resize', this.updateInputPosition.bind(this));
+    }
+
+    updateInputPosition() {
+        if (!this.htmlInput || !this.scene || !this.scene.game) return;
+
+        const canvas = this.scene.game.canvas;
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+
+        // Cover the entire canvas
+        Object.assign(this.htmlInput.style, {
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+        });
+    }
+
     setupKeyboardInput() {
+        // Desktop keyboard input still works via Phaser for backwards compatibility
         this.scene.input.keyboard.on('keydown', (event) => {
             // Prevent event from bubbling to prevent page scrolling etc
             event.stopPropagation();
@@ -61,6 +155,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
                 if (this.currentValue.length < this.maxLength) {
                     const num = event.keyCode >= 96 ? event.keyCode - 96 : event.keyCode - 48;
                     this.currentValue += num.toString();
+                    this.syncToHtmlInput();
                     this.updateDisplay();
                 }
                 return;
@@ -70,6 +165,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
             if (event.keyCode === 189 || event.keyCode === 109) { // - or numpad -
                 if (this.currentValue.length === 0) {
                     this.currentValue = '-';
+                    this.syncToHtmlInput();
                     this.updateDisplay();
                 }
                 return;
@@ -79,6 +175,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
             if (event.keyCode === 190 || event.keyCode === 110) { // . or numpad .
                 if (!this.currentValue.includes('.') && this.currentValue.length < this.maxLength) {
                     this.currentValue += '.';
+                    this.syncToHtmlInput();
                     this.updateDisplay();
                 }
                 return;
@@ -87,6 +184,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
             // Handle backspace
             if (event.keyCode === 8) {
                 this.currentValue = this.currentValue.slice(0, -1);
+                this.syncToHtmlInput();
                 this.updateDisplay();
                 return;
             }
@@ -97,6 +195,13 @@ export default class InputBox extends Phaser.GameObjects.Container {
                 return;
             }
         });
+    }
+
+    syncToHtmlInput() {
+        // Keep HTML input in sync with Phaser state (for when user switches between desktop/mobile)
+        if (this.htmlInput) {
+            this.htmlInput.value = this.currentValue;
+        }
     }
 
     updateDisplay() {
@@ -110,6 +215,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
             // Emit event with the value
             this.scene.events.emit('answerSubmitted', this.currentValue);
             this.currentValue = '';
+            this.syncToHtmlInput();
             this.updateDisplay();
         }
     }
@@ -129,6 +235,19 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
     clear() {
         this.currentValue = '';
+        this.syncToHtmlInput();
         this.updateDisplay();
+    }
+
+    destroy() {
+        // Clean up event listeners
+        this.scene.scale.off('resize', this.updateInputPosition, this);
+
+        // Remove HTML input from DOM
+        if (this.htmlInput && this.htmlInput.parentNode) {
+            this.htmlInput.remove();
+        }
+
+        super.destroy();
     }
 }
