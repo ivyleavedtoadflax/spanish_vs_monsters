@@ -130,7 +130,7 @@ export const TOWER_CONFIG = {
             projectileSpeed: 250,   // Slower main projectile
             range: 1000,
             clusterCount: 5,        // Number of sub-projectiles on explosion
-            clusterDamage: 1,       // Damage per sub-projectile (same as easy turret)
+            clusterDamage: 3,       // Damage per sub-projectile (same as easy turret)
             clusterSpeed: 300       // Sub-projectile speed (same as easy turret)
         },
         projectileConfig: { type: 'cluster' },
