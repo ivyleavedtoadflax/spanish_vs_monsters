@@ -68,7 +68,10 @@ export const TOWER_CONFIG = {
             { fireRate: 1000 }, // Level 1 (1/2)
             { fireRate: 666 },  // Level 2 (1/3)
             { fireRate: 500 },  // Level 3 (1/4)
-            { fireRate: 400 }   // Level 4 (1/5)
+            { fireRate: 400 },   // Level 4
+            { fireRate: 300 },   // Level 5
+            { fireRate: 200 }   // Level 6
+
         ]
     },
     medium: {
@@ -88,7 +91,12 @@ export const TOWER_CONFIG = {
         upgrades: [
             { projectileCount: 4 },
             { projectileCount: 5 },
-            { projectileCount: 6 }
+            { projectileCount: 6 },
+            { projectileCount: 7 },
+            { projectileCount: 8 },
+            { projectileCount: 9 },
+            { projectileCount: 10 },
+
         ]
     },
     hard: {
@@ -96,7 +104,7 @@ export const TOWER_CONFIG = {
         name: 'Sniper',
         baseStats: {
             damage: 3,
-            fireRate: 3000, // Slower
+            fireRate: 2000, // Slower
             projectileSpeed: 600, // 2x speed of standard
             range: 2000
         },
@@ -104,9 +112,10 @@ export const TOWER_CONFIG = {
         upgradeDuration: 600000,
         // Explicit upgrade path: Increase Damage AND Speed simultaneously
         upgrades: [
-            { damage: 4, projectileSpeed: 750 },
-            { damage: 5, projectileSpeed: 900 },
-            { damage: 6, projectileSpeed: 1050 }
+            { damage: 4, projectileSpeed: 750, fireRate: 1500 },
+            { damage: 5, projectileSpeed: 900, fireRate: 1000 },
+            { damage: 6, projectileSpeed: 1050, fireRate: 750 },
+            { damage: 6, projectileSpeed: 1050, fireRate: 500 }
         ]
     }
 };
