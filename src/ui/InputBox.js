@@ -118,6 +118,22 @@ export default class InputBox extends Phaser.GameObjects.Container {
             }
         });
 
+        // Disable Phaser keyboard when HTML input is focused (prevents double input)
+        this.htmlInput.addEventListener('focus', () => {
+            this.htmlInputFocused = true;
+            if (this.scene.input && this.scene.input.keyboard) {
+                this.scene.input.keyboard.enabled = false;
+            }
+        });
+
+        // Re-enable Phaser keyboard when HTML input loses focus
+        this.htmlInput.addEventListener('blur', () => {
+            this.htmlInputFocused = false;
+            if (this.scene.input && this.scene.input.keyboard) {
+                this.scene.input.keyboard.enabled = true;
+            }
+        });
+
         // Position the input over the canvas
         this.updateInputPosition();
         this.scene.scale.on('resize', this.updateInputPosition, this);
