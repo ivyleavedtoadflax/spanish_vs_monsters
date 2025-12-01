@@ -126,3 +126,10 @@ JavaScript
 this.body.setSize(30, 30);
 this.body.setOffset(5, 5); // Center the hitbox
 Summary
+
+## Active Technologies
+- JavaScript (ES6+ modules, no TypeScript) + Phaser 3.90.0, Vite 7.2.5, Spanish verb conjugation library (TBD - see research phase) (001-spanish-verb-conjugation)
+- Client-side only (no server, no persistence beyond session) (001-spanish-verb-conjugation)
+
+## Recent Changes
+- 001-spanish-verb-conjugation: Added JavaScript (ES6+ modules, no TypeScript) + Phaser 3.90.0, Vite 7.2.5, Spanish verb conjugation library (TBD - see research phase)
