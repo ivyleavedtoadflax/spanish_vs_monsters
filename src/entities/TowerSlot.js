@@ -2,8 +2,8 @@ import Phaser from 'phaser';
 import { TOWER, COLORS } from '../config.js';
 
 /**
- * TowerSlot represents an empty tower slot with a maths problem.
- * When the problem is solved, the slot spawns a Tower and is destroyed.
+ * TowerSlot represents an empty tower slot with a verb conjugation prompt.
+ * When the prompt is answered correctly, the slot spawns a Tower and is destroyed.
  */
 export default class TowerSlot extends Phaser.GameObjects.Container {
     constructor(scene, x, y, lane, slotIndex, difficulty = 'easy') {
@@ -12,7 +12,7 @@ export default class TowerSlot extends Phaser.GameObjects.Container {
         this.difficulty = difficulty;
         this.lane = lane;
         this.slotIndex = slotIndex;
-        this.problem = null;
+        this.prompt = null; // Changed from problem to prompt
 
         // Add to scene
         scene.add.existing(this);
@@ -23,21 +23,35 @@ export default class TowerSlot extends Phaser.GameObjects.Container {
         this.slotBg.strokeCircle(0, 0, TOWER.size / 2);
         this.add(this.slotBg);
 
-        // Create problem text display
+        // Create prompt text display (wider for verb prompts)
         this.problemText = scene.add.text(0, 0, '', {
-            fontSize: '14px',
+            fontSize: '12px',
             fontFamily: 'Arial',
             color: '#ffffff',
             align: 'center',
             stroke: '#000000',
-            strokeThickness: 2
+            strokeThickness: 2,
+            wordWrap: { width: 90 }
         }).setOrigin(0.5);
         this.add(this.problemText);
     }
 
+    setPrompt(prompt) {
+        this.prompt = prompt;
+        // Use displayText from VerbPrompt (e.g., "hablar (yo, present)")
+        this.problemText.setText(prompt.displayText);
+    }
+
+    // Keep setProblem for backward compatibility during transition
     setProblem(problem) {
-        this.problem = problem;
-        this.problemText.setText(problem.expression_short);
+        if (problem.displayText) {
+            // It's actually a prompt
+            this.setPrompt(problem);
+        } else {
+            // Old maths problem format
+            this.problem = problem;
+            this.problemText.setText(problem.expression_short || problem.expression);
+        }
     }
 
     destroy() {
