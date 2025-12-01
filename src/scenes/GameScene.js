@@ -106,6 +106,20 @@ export default class GameScene extends Phaser.Scene {
         this.lastRotationTime = 0;
     }
 
+    getConstrainedDifficulty(baseDifficulty, requestedDifficulty) {
+        const difficultyOrder = ['easy', 'medium', 'hard'];
+        const baseIndex = difficultyOrder.indexOf(baseDifficulty);
+        const requestedIndex = difficultyOrder.indexOf(requestedDifficulty);
+
+        if (requestedIndex === -1 || baseIndex === -1) {
+            console.warn(`Invalid difficulty key provided: base=${baseDifficulty}, requested=${requestedDifficulty}. Defaulting to 'easy'.`);
+            return 'easy';
+        }
+
+        // If the requested difficulty is higher than the base difficulty, cap it at the base difficulty.
+        return requestedIndex > baseIndex ? baseDifficulty : requestedDifficulty;
+    }
+
     createTowerSlots() {
         // Assign difficulties to slots in a pattern
         // First column uses simpler difficulties, cluster only appears from column 2 onwards
@@ -120,7 +134,9 @@ export default class GameScene extends Phaser.Scene {
                 // Use different difficulty patterns for first column vs later columns
                 const slotDifficulties = slotIndex === 0 ? firstColumnDifficulties : laterColumnDifficulties;
                 const difficultyIndex = (slotIndex + laneIndex) % slotDifficulties.length;
-                const difficulty = slotDifficulties[difficultyIndex];
+                const baseDifficulty = this.registry.get('baseDifficulty') || 'easy'; // Default to 'easy' if not set
+        const requestedDifficulty = slotDifficulties[difficultyIndex];
+        const difficulty = this.getConstrainedDifficulty(baseDifficulty, requestedDifficulty);
 
                 // Create tower slot with verb prompt
                 const towerSlot = new TowerSlot(this, x, y, laneIndex, slotIndex, difficulty);
@@ -176,7 +192,9 @@ export default class GameScene extends Phaser.Scene {
             if (tower && tower.active) {
                 const laneIndex = tower.lane;
                 const slotIndex = tower.slotIndex;
-                const difficulty = tower.difficulty;
+                const baseDifficulty = this.registry.get('baseDifficulty') || 'easy';
+                const requestedDifficulty = tower.difficulty; // Original difficulty of the tower
+                const difficulty = this.getConstrainedDifficulty(baseDifficulty, requestedDifficulty);
                 const x = TOWER_SLOTS_X[slotIndex];
                 const y = LANES[laneIndex];
 

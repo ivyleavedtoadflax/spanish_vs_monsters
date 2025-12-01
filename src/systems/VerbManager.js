@@ -7,7 +7,7 @@ import { PRONOUNS, TENSE_MAPPING } from '../config.js';
  * Replaces MathsManager in the game architecture
  */
 export default class VerbManager {
-    constructor(baseDifficulty = 'Beginner') {
+    constructor(baseDifficulty = 'easy') {
         this.setBaseDifficulty(baseDifficulty);
         this.verbList = this.initializeVerbList();
         this.conjugationCache = new Map(); // Performance optimization
@@ -77,8 +77,17 @@ export default class VerbManager {
      * @param {string} difficulty - 'easy', 'medium', or 'hard'
      * @returns {Object} { tense, mood }
      */
-    getTenseForDifficulty(difficulty) {
-        const config = this.tenseMapping[difficulty];
+    getTenseForDifficulty(requestedDifficulty) {
+        const difficultyOrder = ['easy', 'medium', 'hard'];
+        const baseIndex = difficultyOrder.indexOf(this.baseDifficulty);
+        const requestedIndex = difficultyOrder.indexOf(requestedDifficulty);
+
+        let effectiveDifficulty = requestedDifficulty;
+        if (requestedIndex > baseIndex) {
+            effectiveDifficulty = this.baseDifficulty;
+        }
+
+        const config = this.tenseMapping[effectiveDifficulty];
         
         if (!config) {
             console.warn(`Invalid difficulty: ${difficulty}, defaulting to easy`);

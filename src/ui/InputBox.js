@@ -66,7 +66,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
         this.htmlInput.spellcheck = false;
         this.htmlInput.maxLength = this.maxLength;
 
-        // Make completely transparent but cover the entire canvas
+        // Initially hidden and not intercepting pointer events
         Object.assign(this.htmlInput.style, {
             position: 'absolute',
             fontSize: '16px',        // >= 16px to prevent iOS zoom
@@ -77,10 +77,13 @@ export default class InputBox extends Phaser.GameObjects.Container {
             caretColor: 'transparent',  // Hide the caret too
             zIndex: '1000',
             opacity: '0',  // Completely invisible
-            // Will be sized to match canvas in updateInputPosition
+            pointerEvents: 'none', // Do not intercept mouse events by default
         });
 
         document.body.appendChild(this.htmlInput);
+
+        // Initial state: hidden
+        this.disableInput();
 
         // Sync HTML input value changes to Phaser display
         this.htmlInput.addEventListener('input', () => {
@@ -112,25 +115,37 @@ export default class InputBox extends Phaser.GameObjects.Container {
         // Disable Phaser keyboard when HTML input is focused (prevents double input)
         this.htmlInput.addEventListener('focus', () => {
             this.htmlInputFocused = true;
-            if (this.scene.input && this.scene.input.keyboard) {
-                this.scene.input.keyboard.enabled = false;
-            }
+            this.scene.input.keyboard.enabled = false;
         });
 
         // Re-enable Phaser keyboard when HTML input loses focus
         this.htmlInput.addEventListener('blur', () => {
             this.htmlInputFocused = false;
-            if (this.scene.input && this.scene.input.keyboard) {
-                this.scene.input.keyboard.enabled = true;
-            }
+            this.scene.input.keyboard.enabled = true;
         });
 
-        // Position the input over the canvas
+        // Position the input over the visual input box
         this.updateInputPosition();
         this.scene.scale.on('resize', this.updateInputPosition, this);
 
         // Also update on window resize (for when browser is resized)
         window.addEventListener('resize', this.updateInputPosition.bind(this));
+    }
+
+    // New methods to control HTML input visibility and focus
+    enableInput() {
+        this.htmlInput.style.opacity = '1';
+        this.htmlInput.style.pointerEvents = 'auto';
+        this.htmlInput.focus();
+        this.scene.input.keyboard.enabled = false; // Disable Phaser keyboard when HTML input is active
+        this.updateInputPosition(); // Ensure correct positioning when enabled
+    }
+
+    disableInput() {
+        this.htmlInput.style.opacity = '0';
+        this.htmlInput.style.pointerEvents = 'none';
+        this.htmlInput.blur();
+        this.scene.input.keyboard.enabled = true; // Re-enable Phaser keyboard
     }
 
     updateInputPosition() {
@@ -139,25 +154,34 @@ export default class InputBox extends Phaser.GameObjects.Container {
         const canvas = this.scene.game.canvas;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
+        // Get the position and size of the Phaser InputBox in screen coordinates
+        const bounds = this.getBounds(); // Get bounds of the Phaser.GameObjects.Container
+        const scaleManager = this.scene.scale;
 
-        // Cover the entire canvas
+        // Convert Phaser world coordinates to screen coordinates
+        const screenX = scaleManager.canvasBounds.left + (bounds.x * scaleManager.displayScale.x);
+        const screenY = scaleManager.canvasBounds.top + (bounds.y * scaleManager.displayScale.y);
+        const screenWidth = bounds.width * scaleManager.displayScale.x;
+        const screenHeight = bounds.height * scaleManager.displayScale.y;
+
+        // Position the HTML input directly over the Phaser input box
         Object.assign(this.htmlInput.style, {
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            width: `${rect.width}px`,
-            height: `${rect.height}px`,
+            left: `${screenX}px`,
+            top: `${screenY}px`,
+            width: `${screenWidth}px`,
+            height: `${screenHeight}px`,
         });
     }
 
     setupKeyboardInput() {
         // Desktop keyboard input still works via Phaser for backwards compatibility
+        // This will only fire if Phaser keyboard is enabled (i.e., HTML input is not focused)
         this.scene.input.keyboard.on('keydown', (event) => {
             // Prevent event from bubbling to prevent page scrolling etc
-            // But don't stop propagation if the HTML input is focused, otherwise it won't receive input
-            if (!this.htmlInputFocused) {
-                // event.stopPropagation();
-            }
+            // This check is now redundant as Phaser keyboard is disabled when HTML input is focused
+            // if (!this.htmlInputFocused) {
+            //     // event.stopPropagation();
+            // }
 
             // Handle backspace
             if (event.keyCode === 8) {
@@ -169,14 +193,14 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
             // Handle enter/return
             if (event.keyCode === 13) {
-                e.preventDefault(); // Prevent default browser behavior (e.g., form submission)
+                event.preventDefault(); // Prevent default browser behavior (e.g., form submission)
                 this.submit();
                 return;
             }
 
             // Handle ArrowUp for history
             if (event.keyCode === 38) { // ArrowUp
-                e.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
+                event.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
                 if (this.history.length > 0) {
                     this.historyIndex = Math.max(0, this.historyIndex - 1);
                     this.currentValue = this.history[this.historyIndex];
@@ -188,7 +212,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
             // Handle ArrowDown for history (optional, but good for consistency)
             if (event.keyCode === 40) { // ArrowDown
-                e.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
+                event.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
                 if (this.history.length > 0) {
                     this.historyIndex = Math.min(this.history.length - 1, this.historyIndex + 1);
                     this.currentValue = this.history[this.historyIndex];
@@ -303,6 +327,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
     destroy() {
         // Clean up event listeners
         this.scene.scale.off('resize', this.updateInputPosition, this);
+        window.removeEventListener('resize', this.updateInputPosition.bind(this));
 
         // Remove HTML input from DOM
         if (this.htmlInput && this.htmlInput.parentNode) {

@@ -25,3 +25,8 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+const canvas = game.canvas;
+canvas.setAttribute('tabindex', '0');  // Make canvas focusable
+game.input.keyboard.target = canvas;   // Target Phaser keyboard to canvas
+canvas.addEventListener('pointerdown', () => canvas.focus());

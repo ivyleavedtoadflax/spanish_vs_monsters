@@ -216,7 +216,7 @@ export default class MenuScene extends Phaser.Scene {
         const verbDifficultyLabel = TENSE_MAPPING[this.selectedVerbDifficulty].label;
         
         // Store selected verb difficulty label in registry (Beginner/Intermediate/Advanced)
-        this.registry.set('baseDifficulty', verbDifficultyLabel);
+        this.registry.set('baseDifficulty', this.selectedVerbDifficulty);
 
         // Store selected game difficulty in registry
         this.registry.set('gameDifficulty', this.selectedGameDifficulty);
