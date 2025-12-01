@@ -658,28 +658,40 @@ export default class GameScene extends Phaser.Scene {
         // If we found an expired prompt, show answer then rotate
         if (oldestExpired) {
             const correctForm = oldestExpired.prompt.correctAnswers[0];
+            const oldPrompt = oldestExpired.prompt.displayText;
+            
+            console.log('🔄 TIMEOUT: Showing answer for expired prompt:', oldPrompt);
+            console.log('✅ Correct answer:', correctForm);
             
             // Mark as showing answer to prevent duplicate rotations
             oldestExpired.isShowingAnswer = true;
             
             // Show the correct answer in RED on the tower itself
             if (oldestExpired.problemText) {
+                console.log('📝 Setting text to:', correctForm);
                 oldestExpired.problemText.setColor('#ff6666'); // Red color
                 oldestExpired.problemText.setText(correctForm);
-                oldestExpired.problemText.setFontSize('16px'); // Slightly bigger
+                oldestExpired.problemText.setFontSize(16); // Slightly bigger (number not string)
+                oldestExpired.problemText.setFontStyle('bold'); // Make it bold
                 
                 // Flash effect to draw attention
                 this.tweens.add({
                     targets: oldestExpired.problemText,
-                    scaleX: 1.2,
-                    scaleY: 1.2,
-                    duration: 200,
-                    yoyo: true
+                    scaleX: 1.3,
+                    scaleY: 1.3,
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 1
                 });
             }
 
-            // Wait 3.5 seconds, then rotate to new prompt
-            this.time.delayedCall(3500, () => {
+            // Wait 4 seconds, then rotate to new prompt
+            this.time.delayedCall(4000, () => {
+                if (!oldestExpired || !oldestExpired.active) {
+                    console.log('⚠️ Tower was destroyed before rotation completed');
+                    return;
+                }
+                
                 // Generate a new prompt for this slot/tower
                 const newPrompt = this.verbManager.generatePromptForDifficulty(oldestExpired.difficulty);
                 oldestExpired.setPrompt(newPrompt);
@@ -687,13 +699,14 @@ export default class GameScene extends Phaser.Scene {
                 // Reset text styling
                 if (oldestExpired.problemText) {
                     oldestExpired.problemText.setColor('#ffffff'); // Back to white
-                    oldestExpired.problemText.setFontSize('12px'); // Back to normal
+                    oldestExpired.problemText.setFontSize(12); // Back to normal (number not string)
+                    oldestExpired.problemText.setFontStyle('normal');
                 }
                 
                 // Clear the flag
                 oldestExpired.isShowingAnswer = false;
                 
-                console.log('Rotated expired prompt:', correctForm, '→', newPrompt.displayText);
+                console.log('✨ Rotated to new prompt:', newPrompt.displayText);
             });
 
             // Update rotation timer to enforce cooldown
