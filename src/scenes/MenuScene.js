@@ -14,8 +14,6 @@ export default class MenuScene extends Phaser.Scene {
         overlay.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         overlay.setDepth(-5);
         
-        console.log('MenuScene created');
-
         // Game title
         this.add.text(CANVAS_WIDTH / 2, 100, 'SPANISH vs MONSTERS', {
             fontSize: '48px',
@@ -161,20 +159,13 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         startBtn.on('pointerdown', () => {
-            console.log('Start button clicked');
             this.startGame();
         });
 
         // Add Enter key listener to start game
         const enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         enterKey.on('down', () => {
-            console.log('Enter key pressed in Menu');
             this.startGame();
-        });
-
-        // Debug: Log any click on the scene
-        this.input.on('pointerdown', (pointer) => {
-            console.log(`Pointer down at ${pointer.x}, ${pointer.y}`);
         });
 
         // Instructions

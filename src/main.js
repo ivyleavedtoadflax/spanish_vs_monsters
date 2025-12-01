@@ -36,6 +36,5 @@ game.events.on('ready', () => {
         // Just set tabindex to allow focus, but let Phaser handle the rest
         canvas.setAttribute('tabindex', '0');
         canvas.focus();
-        console.log('Game ready');
     }
 });

@@ -135,8 +135,8 @@ export default class GameScene extends Phaser.Scene {
                 const slotDifficulties = slotIndex === 0 ? firstColumnDifficulties : laterColumnDifficulties;
                 const difficultyIndex = (slotIndex + laneIndex) % slotDifficulties.length;
                 const baseDifficulty = this.registry.get('baseDifficulty') || 'easy'; // Default to 'easy' if not set
-        const requestedDifficulty = slotDifficulties[difficultyIndex];
-        const difficulty = this.getConstrainedDifficulty(baseDifficulty, requestedDifficulty);
+                const requestedDifficulty = slotDifficulties[difficultyIndex];
+                const difficulty = this.getConstrainedDifficulty(baseDifficulty, requestedDifficulty);
 
                 // Create tower slot with verb prompt
                 const towerSlot = new TowerSlot(this, x, y, laneIndex, slotIndex, difficulty);
