@@ -90,18 +90,18 @@ export default class VerbManager {
         const config = this.tenseMapping[effectiveDifficulty];
         
         if (!config) {
-            console.warn(`Invalid difficulty: ${difficulty}, defaulting to easy`);
+            console.warn(`Invalid difficulty: ${requestedDifficulty}, defaulting to easy`);
             return { tense: 'PRESENT', mood: 'INDICATIVE' };
         }
 
         // Easy or medium: randomly select from tenses array
-        if (difficulty === 'easy' || difficulty === 'medium') {
+        if (effectiveDifficulty === 'easy' || effectiveDifficulty === 'medium') {
             const randomTense = config.tenses[Math.floor(Math.random() * config.tenses.length)];
             return { tense: randomTense, mood: config.moods[0] };
         }
 
         // Hard: distribute between subjunctive, conditional, and future
-        if (difficulty === 'hard') {
+        if (effectiveDifficulty === 'hard') {
             const rand = Math.random();
             if (rand < 0.5) {
                 // 50% subjunctive
@@ -193,7 +193,7 @@ export default class VerbManager {
         
         const names = {
             'PRESENT': 'present',
-            'PRETERITE': 'preterite',
+            'PRETERITE': 'indefinido',
             'IMPERFECT': 'imperfect',
             'FUTURE': 'future'
         };

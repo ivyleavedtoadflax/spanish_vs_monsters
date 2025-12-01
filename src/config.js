@@ -245,7 +245,7 @@ export const TENSE_MAPPING = {
         moods: ['INDICATIVE'],
         label: 'Intermediate',
         cefr: 'B1',
-        description: 'Preterite and Imperfect (past tenses)'
+        description: 'Indefinido and Imperfect (past tenses)'
     },
     hard: {
         // Subjunctive mood tenses
