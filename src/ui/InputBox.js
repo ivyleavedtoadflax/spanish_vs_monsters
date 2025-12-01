@@ -7,7 +7,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
         this.scene = scene;
         this.currentValue = '';
-        this.maxLength = 10;
+        this.maxLength = 20;
 
         // Add to scene
         scene.add.existing(this);
@@ -56,8 +56,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
     createHtmlInput() {
         this.htmlInput = document.createElement('input');
         this.htmlInput.type = 'text';
-        this.htmlInput.inputMode = 'decimal';  // Show numeric keyboard with decimal on mobile
-        this.htmlInput.pattern = '[0-9.\\-]*';
+        this.htmlInput.inputMode = 'text';  // Show text keyboard
         this.htmlInput.autocomplete = 'off';
         this.htmlInput.autocorrect = 'off';
         this.htmlInput.autocapitalize = 'off';
@@ -82,23 +81,12 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
         // Sync HTML input value changes to Phaser display
         this.htmlInput.addEventListener('input', () => {
-            // Filter to only allow valid characters
+            // Filter to only allow valid characters (letters, accents, spaces)
             let value = this.htmlInput.value;
 
-            // Allow minus only at the start
-            const hasMinus = value.startsWith('-');
-            value = value.replace(/[^0-9.]/g, '');
-
-            // Only allow one decimal point
-            const parts = value.split('.');
-            if (parts.length > 2) {
-                value = parts[0] + '.' + parts.slice(1).join('');
-            }
-
-            // Re-add minus if it was at the start
-            if (hasMinus) {
-                value = '-' + value;
-            }
+            // Allow letters, accents, spaces
+            // Spanish accents: áéíóúñüÁÉÍÓÚÑÜ
+            value = value.replace(/[^a-zA-ZáéíóúñüÁÉÍÓÚÑÜ\s]/g, '');
 
             // Enforce max length
             if (value.length > this.maxLength) {
@@ -163,38 +151,9 @@ export default class InputBox extends Phaser.GameObjects.Container {
         // Desktop keyboard input still works via Phaser for backwards compatibility
         this.scene.input.keyboard.on('keydown', (event) => {
             // Prevent event from bubbling to prevent page scrolling etc
-            event.stopPropagation();
-
-            // Handle number keys (both regular and numpad)
-            if ((event.keyCode >= 48 && event.keyCode <= 57) || // 0-9
-                (event.keyCode >= 96 && event.keyCode <= 105)) { // Numpad 0-9
-                if (this.currentValue.length < this.maxLength) {
-                    const num = event.keyCode >= 96 ? event.keyCode - 96 : event.keyCode - 48;
-                    this.currentValue += num.toString();
-                    this.syncToHtmlInput();
-                    this.updateDisplay();
-                }
-                return;
-            }
-
-            // Handle minus sign
-            if (event.keyCode === 189 || event.keyCode === 109) { // - or numpad -
-                if (this.currentValue.length === 0) {
-                    this.currentValue = '-';
-                    this.syncToHtmlInput();
-                    this.updateDisplay();
-                }
-                return;
-            }
-
-            // Handle decimal point
-            if (event.keyCode === 190 || event.keyCode === 110) { // . or numpad .
-                if (!this.currentValue.includes('.') && this.currentValue.length < this.maxLength) {
-                    this.currentValue += '.';
-                    this.syncToHtmlInput();
-                    this.updateDisplay();
-                }
-                return;
+            // But don't stop propagation if the HTML input is focused, otherwise it won't receive input
+            if (!this.htmlInputFocused) {
+                // event.stopPropagation();
             }
 
             // Handle backspace
@@ -209,6 +168,19 @@ export default class InputBox extends Phaser.GameObjects.Container {
             if (event.keyCode === 13) {
                 this.submit();
                 return;
+            }
+
+            // Handle letters and accents
+            // We'll use event.key which gives the actual character
+            if (event.key && event.key.length === 1) {
+                // Check if it's a valid character (letter, accent, space)
+                if (/[a-zA-ZáéíóúñüÁÉÍÓÚÑÜ\s]/.test(event.key)) {
+                    if (this.currentValue.length < this.maxLength) {
+                        this.currentValue += event.key;
+                        this.syncToHtmlInput();
+                        this.updateDisplay();
+                    }
+                }
             }
         });
     }
@@ -242,6 +214,44 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
         this.scene.time.delayedCall(300, () => {
             this.background.setStrokeStyle(2, 0x4466aa);
+        });
+    }
+
+    /**
+     * Show feedback overlay with correct answer
+     * @param {string} correctForm - Correct answer with accents
+     * @param {boolean} wasCorrect - Whether the user's answer was correct (affects color)
+     */
+    showFeedback(correctForm, wasCorrect = true) {
+        // Create feedback text if it doesn't exist
+        if (!this.feedbackText) {
+            this.feedbackText = this.scene.add.text(0, -30, '', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#ffdd44',
+                align: 'center',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+            this.add(this.feedbackText);
+        }
+
+        // Set color based on correctness: green for correct, red for incorrect
+        const feedbackColor = wasCorrect ? '#44ff44' : '#ff6666';
+        this.feedbackText.setColor(feedbackColor);
+
+        // Show correct form
+        this.feedbackText.setText(correctForm);
+        this.feedbackText.setAlpha(1);
+        this.feedbackText.setScale(1);
+
+        // Fade out after displaying for 2 seconds (more time to read)
+        this.scene.tweens.add({
+            targets: this.feedbackText,
+            alpha: 0,
+            duration: 500,
+            delay: 2000,
+            ease: 'Power2'
         });
     }
 
