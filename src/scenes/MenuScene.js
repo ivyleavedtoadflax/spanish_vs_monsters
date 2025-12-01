@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, DIFFICULTY_SETTINGS } from '../config.js';
-import { YEAR_LEVELS } from '../systems/MathsManager.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, DIFFICULTY_SETTINGS, TENSE_MAPPING } from '../config.js';
 import AudioControls from '../ui/AudioControls.js';
 
 export default class MenuScene extends Phaser.Scene {
@@ -16,7 +15,7 @@ export default class MenuScene extends Phaser.Scene {
         overlay.setDepth(-5);
 
         // Game title
-        this.add.text(CANVAS_WIDTH / 2, 100, 'MATHS vs MONSTERS', {
+        this.add.text(CANVAS_WIDTH / 2, 100, 'SPANISH vs MONSTERS', {
             fontSize: '48px',
             fontFamily: 'Arial',
             color: '#4ade80',
@@ -24,75 +23,80 @@ export default class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Subtitle
-        this.add.text(CANVAS_WIDTH / 2, 160, 'Solve problems. Defend your base.', {
+        this.add.text(CANVAS_WIDTH / 2, 160, 'Conjugate verbs. Defend your base.', {
             fontSize: '18px',
             fontFamily: 'Arial',
             color: '#888899'
         }).setOrigin(0.5);
 
-        // Year level label
-        this.add.text(CANVAS_WIDTH / 2, 250, 'Select Year Level:', {
+        // Verb Difficulty label
+        this.add.text(CANVAS_WIDTH / 2, 250, 'Select Verb Level:', {
             fontSize: '20px',
             fontFamily: 'Arial',
             color: '#ffffff'
         }).setOrigin(0.5);
 
-        // Create year level buttons
-        this.selectedYearIndex = 1; // Default to Year 1
-        this.yearButtons = [];
+        // Create verb difficulty buttons
+        this.selectedVerbDifficulty = 'easy'; // Default to Beginner
+        this.verbButtons = [];
 
-        // Create difficulty selection
-        this.selectedDifficultyKey = 'medium'; // Default to Medium
-        this.difficultyButtons = [];
+        // Create game speed selection
+        this.selectedGameDifficulty = 'medium'; // Default to Medium
+        this.gameButtons = [];
 
-        const yearLabels = ['Reception', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'];
-        const buttonWidth = 90;
-        const buttonSpacing = 10;
-        const totalWidth = yearLabels.length * buttonWidth + (yearLabels.length - 1) * buttonSpacing;
+        const verbLevels = [
+            { key: 'easy', label: TENSE_MAPPING.easy.label },
+            { key: 'medium', label: TENSE_MAPPING.medium.label },
+            { key: 'hard', label: TENSE_MAPPING.hard.label }
+        ];
+        
+        const buttonWidth = 120;
+        const buttonSpacing = 20;
+        const totalWidth = verbLevels.length * buttonWidth + (verbLevels.length - 1) * buttonSpacing;
         const startX = (CANVAS_WIDTH - totalWidth) / 2 + buttonWidth / 2;
 
-        yearLabels.forEach((label, index) => {
+        verbLevels.forEach((level, index) => {
             const x = startX + index * (buttonWidth + buttonSpacing);
             const y = 310;
 
-            const btn = this.add.text(x, y, label, {
-                fontSize: '14px',
+            const btn = this.add.text(x, y, level.label, {
+                fontSize: '16px',
                 fontFamily: 'Arial',
-                color: index === this.selectedYearIndex ? '#1a1a2e' : '#ffffff',
-                backgroundColor: index === this.selectedYearIndex ? '#4ade80' : '#333355',
-                padding: { x: 10, y: 8 }
+                color: level.key === this.selectedVerbDifficulty ? '#1a1a2e' : '#ffffff',
+                backgroundColor: level.key === this.selectedVerbDifficulty ? '#4ade80' : '#333355',
+                padding: { x: 15, y: 10 }
             }).setOrigin(0.5)
                 .setInteractive({ useHandCursor: true });
 
-            btn.yearIndex = index;
+            btn.verbKey = level.key;
 
             btn.on('pointerover', () => {
-                if (index !== this.selectedYearIndex) {
+                if (level.key !== this.selectedVerbDifficulty) {
                     btn.setStyle({ backgroundColor: '#444466' });
                 }
             });
 
             btn.on('pointerout', () => {
-                if (index !== this.selectedYearIndex) {
+                if (level.key !== this.selectedVerbDifficulty) {
                     btn.setStyle({ backgroundColor: '#333355' });
                 }
             });
 
             btn.on('pointerdown', () => {
-                this.selectYear(index);
+                this.selectVerbDifficulty(level.key);
             });
 
-            this.yearButtons.push(btn);
+            this.verbButtons.push(btn);
         });
 
-        // Difficulty label
-        this.add.text(CANVAS_WIDTH / 2, 370, 'Select Difficulty:', {
+        // Game Speed label
+        this.add.text(CANVAS_WIDTH / 2, 370, 'Select Game Speed:', {
             fontSize: '20px',
             fontFamily: 'Arial',
             color: '#ffffff'
         }).setOrigin(0.5);
 
-        // Create difficulty buttons
+        // Create game speed buttons
         const difficultyKeys = Object.keys(DIFFICULTY_SETTINGS);
         const diffButtonWidth = 100;
         const diffButtonSpacing = 10;
@@ -104,7 +108,7 @@ export default class MenuScene extends Phaser.Scene {
             const x = diffStartX + index * (diffButtonWidth + diffButtonSpacing);
             const y = 420;
 
-            const isSelected = key === this.selectedDifficultyKey;
+            const isSelected = key === this.selectedGameDifficulty;
             const btn = this.add.text(x, y, setting.label, {
                 fontSize: '14px',
                 fontFamily: 'Arial',
@@ -117,22 +121,22 @@ export default class MenuScene extends Phaser.Scene {
             btn.difficultyKey = key;
 
             btn.on('pointerover', () => {
-                if (key !== this.selectedDifficultyKey) {
+                if (key !== this.selectedGameDifficulty) {
                     btn.setStyle({ backgroundColor: '#444466' });
                 }
             });
 
             btn.on('pointerout', () => {
-                if (key !== this.selectedDifficultyKey) {
+                if (key !== this.selectedGameDifficulty) {
                     btn.setStyle({ backgroundColor: '#333355' });
                 }
             });
 
             btn.on('pointerdown', () => {
-                this.selectDifficulty(key);
+                this.selectGameDifficulty(key);
             });
 
-            this.difficultyButtons.push(btn);
+            this.gameButtons.push(btn);
         });
 
         // Start Game button
@@ -159,7 +163,7 @@ export default class MenuScene extends Phaser.Scene {
 
         // Instructions
         this.add.text(CANVAS_WIDTH / 2, 600,
-            'Answer maths questions to activate towers.  Answer more questions to powerup towers', {
+            'Type the correct verb conjugation to activate towers. Use accents for bonus points!', {
             fontSize: '14px',
             fontFamily: 'Arial',
             color: '#2fff00ff'
@@ -169,12 +173,12 @@ export default class MenuScene extends Phaser.Scene {
         this.audioControls = new AudioControls(this);
     }
 
-    selectYear(index) {
-        this.selectedYearIndex = index;
+    selectVerbDifficulty(key) {
+        this.selectedVerbDifficulty = key;
 
         // Update button styles
-        this.yearButtons.forEach((btn, i) => {
-            if (i === index) {
+        this.verbButtons.forEach((btn) => {
+            if (btn.verbKey === key) {
                 btn.setStyle({
                     color: '#1a1a2e',
                     backgroundColor: '#4ade80'
@@ -188,11 +192,11 @@ export default class MenuScene extends Phaser.Scene {
         });
     }
 
-    selectDifficulty(key) {
-        this.selectedDifficultyKey = key;
+    selectGameDifficulty(key) {
+        this.selectedGameDifficulty = key;
 
         // Update button styles
-        this.difficultyButtons.forEach((btn) => {
+        this.gameButtons.forEach((btn) => {
             if (btn.difficultyKey === key) {
                 btn.setStyle({
                     color: '#1a1a2e',
@@ -208,11 +212,14 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     startGame() {
-        // Store selected year level in registry
-        this.registry.set('baseYearLevel', YEAR_LEVELS[this.selectedYearIndex]);
+        // Map verb difficulty key to label for VerbManager
+        const verbDifficultyLabel = TENSE_MAPPING[this.selectedVerbDifficulty].label;
+        
+        // Store selected verb difficulty label in registry (Beginner/Intermediate/Advanced)
+        this.registry.set('baseDifficulty', verbDifficultyLabel);
 
-        // Store selected difficulty in registry
-        this.registry.set('gameDifficulty', this.selectedDifficultyKey);
+        // Store selected game difficulty in registry
+        this.registry.set('gameDifficulty', this.selectedGameDifficulty);
 
         // Start game scene
         this.scene.start('GameScene');
