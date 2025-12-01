@@ -666,19 +666,24 @@ export default class GameScene extends Phaser.Scene {
             // Mark as showing answer to prevent duplicate rotations
             oldestExpired.isShowingAnswer = true;
             
-            // Show the correct answer in RED on the tower itself
+            // Show both the question and answer so you can learn the connection
             if (oldestExpired.problemText) {
-                console.log('📝 Setting text to:', correctForm);
-                oldestExpired.problemText.setColor('#ff6666'); // Red color
-                oldestExpired.problemText.setText(correctForm);
-                oldestExpired.problemText.setFontSize(16); // Slightly bigger (number not string)
+                console.log('📝 Showing Q&A - Question:', oldPrompt, 'Answer:', correctForm);
+                
+                // Format: Question on one line, Answer in red below
+                const displayText = `${oldPrompt}\n→ ${correctForm}`;
+                
+                oldestExpired.problemText.setColor('#ffaa44'); // Orange/yellow for question
+                oldestExpired.problemText.setText(displayText);
+                oldestExpired.problemText.setFontSize(13); // Slightly bigger to fit both lines
                 oldestExpired.problemText.setFontStyle('bold'); // Make it bold
+                oldestExpired.problemText.setWordWrapWidth(100); // Ensure it wraps properly
                 
                 // Flash effect to draw attention
                 this.tweens.add({
                     targets: oldestExpired.problemText,
-                    scaleX: 1.3,
-                    scaleY: 1.3,
+                    scaleX: 1.2,
+                    scaleY: 1.2,
                     duration: 300,
                     yoyo: true,
                     repeat: 1
@@ -696,11 +701,12 @@ export default class GameScene extends Phaser.Scene {
                 const newPrompt = this.verbManager.generatePromptForDifficulty(oldestExpired.difficulty);
                 oldestExpired.setPrompt(newPrompt);
                 
-                // Reset text styling
+                // Reset text styling back to normal
                 if (oldestExpired.problemText) {
                     oldestExpired.problemText.setColor('#ffffff'); // Back to white
-                    oldestExpired.problemText.setFontSize(12); // Back to normal (number not string)
+                    oldestExpired.problemText.setFontSize(12); // Back to normal
                     oldestExpired.problemText.setFontStyle('normal');
+                    oldestExpired.problemText.setWordWrapWidth(90); // Back to normal wrap
                 }
                 
                 // Clear the flag
