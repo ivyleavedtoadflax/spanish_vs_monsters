@@ -8,6 +8,9 @@ export default class InputBox extends Phaser.GameObjects.Container {
         this.scene = scene;
         this.currentValue = '';
         this.maxLength = 20;
+        this.history = []; // Stores previous submissions
+        this.historyIndex = -1; // Current position in history (-1 means no history selected)
+        this.maxHistorySize = 10; // Max number of entries to keep in history
 
         // Add to scene
         scene.add.existing(this);
@@ -166,7 +169,32 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
             // Handle enter/return
             if (event.keyCode === 13) {
+                e.preventDefault(); // Prevent default browser behavior (e.g., form submission)
                 this.submit();
+                return;
+            }
+
+            // Handle ArrowUp for history
+            if (event.keyCode === 38) { // ArrowUp
+                e.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
+                if (this.history.length > 0) {
+                    this.historyIndex = Math.max(0, this.historyIndex - 1);
+                    this.currentValue = this.history[this.historyIndex];
+                    this.syncToHtmlInput();
+                    this.updateDisplay();
+                }
+                return;
+            }
+
+            // Handle ArrowDown for history (optional, but good for consistency)
+            if (event.keyCode === 40) { // ArrowDown
+                e.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
+                if (this.history.length > 0) {
+                    this.historyIndex = Math.min(this.history.length - 1, this.historyIndex + 1);
+                    this.currentValue = this.history[this.historyIndex];
+                    this.syncToHtmlInput();
+                    this.updateDisplay();
+                }
                 return;
             }
 
@@ -200,6 +228,13 @@ export default class InputBox extends Phaser.GameObjects.Container {
 
     submit() {
         if (this.currentValue.length > 0) {
+            // Add to history
+            if (this.history.length === this.maxHistorySize) {
+                this.history.shift(); // Remove oldest entry if at max size
+            }
+            this.history.push(this.currentValue);
+            this.historyIndex = -1; // Reset history index after new submission
+
             // Emit event with the value
             this.scene.events.emit('answerSubmitted', this.currentValue);
             this.currentValue = '';
