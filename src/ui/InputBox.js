@@ -66,7 +66,7 @@ export default class InputBox extends Phaser.GameObjects.Container {
         this.htmlInput.spellcheck = false;
         this.htmlInput.maxLength = this.maxLength;
 
-        // Initially hidden and not intercepting pointer events
+        // Initially hidden but interactive
         Object.assign(this.htmlInput.style, {
             position: 'absolute',
             fontSize: '16px',        // >= 16px to prevent iOS zoom
@@ -77,13 +77,10 @@ export default class InputBox extends Phaser.GameObjects.Container {
             caretColor: 'transparent',  // Hide the caret too
             zIndex: '1000',
             opacity: '0',  // Completely invisible
-            pointerEvents: 'none', // Do not intercept mouse events by default
+            pointerEvents: 'auto', // Allow clicking to focus
         });
 
         document.body.appendChild(this.htmlInput);
-
-        // Initial state: hidden
-        this.disableInput();
 
         // Sync HTML input value changes to Phaser display
         this.htmlInput.addEventListener('input', () => {
@@ -129,7 +126,8 @@ export default class InputBox extends Phaser.GameObjects.Container {
         this.scene.scale.on('resize', this.updateInputPosition, this);
 
         // Also update on window resize (for when browser is resized)
-        window.addEventListener('resize', this.updateInputPosition.bind(this));
+        this.resizeHandler = this.updateInputPosition.bind(this);
+        window.addEventListener('resize', this.resizeHandler);
     }
 
     // New methods to control HTML input visibility and focus
@@ -327,7 +325,9 @@ export default class InputBox extends Phaser.GameObjects.Container {
     destroy() {
         // Clean up event listeners
         this.scene.scale.off('resize', this.updateInputPosition, this);
-        window.removeEventListener('resize', this.updateInputPosition.bind(this));
+        if (this.resizeHandler) {
+            window.removeEventListener('resize', this.resizeHandler);
+        }
 
         // Remove HTML input from DOM
         if (this.htmlInput && this.htmlInput.parentNode) {

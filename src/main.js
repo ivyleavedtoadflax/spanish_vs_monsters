@@ -26,7 +26,16 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-const canvas = game.canvas;
-canvas.setAttribute('tabindex', '0');  // Make canvas focusable
-game.input.keyboard.target = canvas;   // Target Phaser keyboard to canvas
-canvas.addEventListener('pointerdown', () => canvas.focus());
+// Cleanup any rogue input elements from previous sessions (HMR safety)
+const existingInputs = document.querySelectorAll('input');
+existingInputs.forEach(input => input.remove());
+
+game.events.on('ready', () => {
+    const canvas = game.canvas;
+    if (canvas) {
+        // Just set tabindex to allow focus, but let Phaser handle the rest
+        canvas.setAttribute('tabindex', '0');
+        canvas.focus();
+        console.log('Game ready');
+    }
+});
