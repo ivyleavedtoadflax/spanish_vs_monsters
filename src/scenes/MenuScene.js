@@ -10,7 +10,7 @@ export default class MenuScene extends Phaser.Scene {
     create() {
         // Create semi-transparent dark overlay to let HTML background show through
         const overlay = this.add.graphics();
-        overlay.fillStyle(0x0d0d1a, 0.9);
+        overlay.fillStyle(0x0d0d1a, 0.85);
         overlay.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         overlay.setDepth(-5);
         
