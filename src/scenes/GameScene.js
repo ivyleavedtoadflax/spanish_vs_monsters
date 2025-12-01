@@ -631,7 +631,8 @@ export default class GameScene extends Phaser.Scene {
 
         // Helper to check if a prompt has expired
         const checkCandidate = (candidate) => {
-            if (candidate && candidate.visible && candidate.prompt && candidate.promptSetTime) {
+            // Don't rotate if already showing answer
+            if (candidate && candidate.visible && candidate.prompt && candidate.promptSetTime && !candidate.isShowingAnswer) {
                 const age = time - candidate.promptSetTime;
                 if (age > lifetime && age > maxAge) {
                     maxAge = age;
@@ -654,29 +655,49 @@ export default class GameScene extends Phaser.Scene {
             }
         });
 
-        // If we found an expired prompt, rotate it
+        // If we found an expired prompt, show answer then rotate
         if (oldestExpired) {
-            // Show the correct answer as educational feedback (red for timeout)
             const correctForm = oldestExpired.prompt.correctAnswers[0];
-            this.showFeedback(correctForm, false, 0, false);
-
-            // Generate a new prompt for this slot/tower
-            const newPrompt = this.verbManager.generatePromptForDifficulty(oldestExpired.difficulty);
-            oldestExpired.setPrompt(newPrompt);
             
-            // Visual feedback - brief flash to show the change
+            // Mark as showing answer to prevent duplicate rotations
+            oldestExpired.isShowingAnswer = true;
+            
+            // Show the correct answer in RED on the tower itself
             if (oldestExpired.problemText) {
+                oldestExpired.problemText.setColor('#ff6666'); // Red color
+                oldestExpired.problemText.setText(correctForm);
+                oldestExpired.problemText.setFontSize('16px'); // Slightly bigger
+                
+                // Flash effect to draw attention
                 this.tweens.add({
                     targets: oldestExpired.problemText,
-                    alpha: 0.3,
-                    duration: 150,
+                    scaleX: 1.2,
+                    scaleY: 1.2,
+                    duration: 200,
                     yoyo: true
                 });
             }
 
+            // Wait 3.5 seconds, then rotate to new prompt
+            this.time.delayedCall(3500, () => {
+                // Generate a new prompt for this slot/tower
+                const newPrompt = this.verbManager.generatePromptForDifficulty(oldestExpired.difficulty);
+                oldestExpired.setPrompt(newPrompt);
+                
+                // Reset text styling
+                if (oldestExpired.problemText) {
+                    oldestExpired.problemText.setColor('#ffffff'); // Back to white
+                    oldestExpired.problemText.setFontSize('12px'); // Back to normal
+                }
+                
+                // Clear the flag
+                oldestExpired.isShowingAnswer = false;
+                
+                console.log('Rotated expired prompt:', correctForm, '→', newPrompt.displayText);
+            });
+
             // Update rotation timer to enforce cooldown
             this.lastRotationTime = time;
-            console.log('Rotated expired prompt:', correctForm, '→', newPrompt.displayText);
         }
     }
 }
