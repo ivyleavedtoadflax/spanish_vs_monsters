@@ -82,4 +82,40 @@ export default class HUD extends Phaser.GameObjects.Container {
             this.questionsText.setText(`Answers: ${waveInfo.questionsAnswered}`);
         }
     }
+
+    /**
+     * Show bonus points indicator with animation
+     * @param {number} bonusPoints - Points awarded
+     */
+    showBonus(bonusPoints) {
+        // Create bonus text if it doesn't exist
+        if (!this.bonusText) {
+            this.bonusText = this.scene.add.text(200, -30, '', {
+                fontSize: '24px',
+                fontFamily: 'Arial',
+                color: '#ffdd00',
+                align: 'center',
+                stroke: '#000000',
+                strokeThickness: 4
+            }).setOrigin(0.5);
+            this.add(this.bonusText);
+        }
+
+        // Show bonus
+        this.bonusText.setText(`+${bonusPoints}!`);
+        this.bonusText.setAlpha(1);
+        this.bonusText.setScale(1);
+        this.bonusText.y = -10;
+
+        // Animate: scale up and fade out while moving up
+        this.scene.tweens.add({
+            targets: this.bonusText,
+            y: -40,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            alpha: 0,
+            duration: 800,
+            ease: 'Power2'
+        });
+    }
 }

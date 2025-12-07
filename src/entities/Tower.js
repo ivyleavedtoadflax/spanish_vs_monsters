@@ -14,7 +14,7 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         this.lane = lane;
         this.slotIndex = slotIndex;
         this.isActive = false;
-        this.problem = null;
+        this.prompt = null; // Changed from problem to prompt
 
         // Load configuration from TOWER_CONFIG
         this.config = TOWER_CONFIG[difficulty];
@@ -41,12 +41,15 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         // Tower starts invisible until activate() is called
         this.setAlpha(1);
 
-        // Create problem text display below the turret
+        // Create prompt text display below the turret (wider for verb prompts)
         this.problemText = scene.add.text(x, y + TOWER.size / 2 + 12, '', {
-            fontSize: '14px',
+            fontSize: '12px',
             fontFamily: 'Arial',
             color: '#ffffff',
-            align: 'center'
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 2,
+            wordWrap: { width: 90 }
         }).setOrigin(0.5);
 
         // Create upgrade level indicator
@@ -60,9 +63,23 @@ export default class Tower extends Phaser.Physics.Arcade.Sprite {
         }).setOrigin(0.5);
     }
 
+    setPrompt(prompt) {
+        this.prompt = prompt;
+        this.promptSetTime = this.scene.time.now; // Track when prompt was set for rotation
+        // Use displayText from VerbPrompt (e.g., "hablar (yo, present)")
+        this.problemText.setText(prompt.displayText);
+    }
+
+    // Keep setProblem for backward compatibility during transition
     setProblem(problem) {
-        this.problem = problem;
-        this.problemText.setText(problem.expression_short);
+        if (problem.displayText) {
+            // It's actually a prompt
+            this.setPrompt(problem);
+        } else {
+            // Old maths problem format
+            this.problem = problem;
+            this.problemText.setText(problem.expression_short || problem.expression);
+        }
     }
 
     activate() {

@@ -5,7 +5,7 @@ import { createTower } from '../entities/towers/TowerFactory.js';
 import { createProjectile } from '../entities/projectiles/ProjectileFactory.js';
 import TowerSlot from '../entities/TowerSlot.js';
 import WaveManager from '../systems/WaveManager.js';
-import MathsManager from '../systems/MathsManager.js';
+import VerbManager from '../systems/VerbManager.js';
 import InputBox from '../ui/InputBox.js';
 import HUD from '../ui/HUD.js';
 import AudioControls from '../ui/AudioControls.js';
@@ -27,21 +27,21 @@ export default class GameScene extends Phaser.Scene {
 
         // Create semi-transparent dark overlay to let HTML background show through
         const overlay = this.add.graphics();
-        overlay.fillStyle(0x0d0d1a, 0.9);
+        overlay.fillStyle(0x0d0d1a, 0.85);
         overlay.fillRect(0, 0, CANVAS_WIDTH, GAME_AREA_HEIGHT);
-        overlay.fillStyle(0x0a0a15, 0.9);
+        overlay.fillStyle(0x0a0a15, 0.85);
         overlay.fillRect(0, GAME_AREA_HEIGHT, CANVAS_WIDTH, INPUT_AREA_HEIGHT);
         overlay.setDepth(-5);
 
-        // Get selected year level from registry
-        const baseYearLevel = this.registry.get('baseYearLevel') || 'year1';
+        // Get selected base difficulty from registry (for verb tenses)
+        const baseDifficulty = this.registry.get('baseDifficulty') || 'Beginner';
 
-        // Get selected difficulty from registry
+        // Get selected difficulty from registry (for game speed/wave delay)
         const difficultyKey = this.registry.get('gameDifficulty') || 'medium';
         this.difficultySettings = DIFFICULTY_SETTINGS[difficultyKey];
 
-        // Create maths manager with selected year level
-        this.mathsManager = new MathsManager(baseYearLevel);
+        // Create verb manager with selected base difficulty
+        this.verbManager = new VerbManager(baseDifficulty);
 
         // Draw lane grid
         this.drawLaneGrid();
@@ -101,13 +101,30 @@ export default class GameScene extends Phaser.Scene {
 
         // Audio controls (bottom right of game area)
         this.audioControls = new AudioControls(this);
+
+        // Track last rotation time for staggered prompt updates
+        this.lastRotationTime = 0;
+    }
+
+    getConstrainedDifficulty(baseDifficulty, requestedDifficulty) {
+        const difficultyOrder = ['easy', 'medium', 'hard'];
+        const baseIndex = difficultyOrder.indexOf(baseDifficulty);
+        const requestedIndex = difficultyOrder.indexOf(requestedDifficulty);
+
+        if (requestedIndex === -1 || baseIndex === -1) {
+            console.warn(`Invalid difficulty key provided: base=${baseDifficulty}, requested=${requestedDifficulty}. Defaulting to 'easy'.`);
+            return 'easy';
+        }
+
+        // If the requested difficulty is higher than the base difficulty, cap it at the base difficulty.
+        return requestedIndex > baseIndex ? baseDifficulty : requestedDifficulty;
     }
 
     createTowerSlots() {
         // Assign difficulties to slots in a pattern
         // First column uses simpler difficulties, cluster only appears from column 2 onwards
         const firstColumnDifficulties = ['easy', 'medium', 'hard', 'easy', 'medium'];
-        const laterColumnDifficulties = ['easy', 'medium', 'hard', 'cluster', 'easy', 'medium'];
+        const laterColumnDifficulties = ['easy', 'medium', 'hard', 'hard', 'easy', 'medium'];
 
         for (let laneIndex = 0; laneIndex < LANES.length; laneIndex++) {
             for (let slotIndex = 0; slotIndex < TOWER_SLOTS_X.length; slotIndex++) {
@@ -117,12 +134,14 @@ export default class GameScene extends Phaser.Scene {
                 // Use different difficulty patterns for first column vs later columns
                 const slotDifficulties = slotIndex === 0 ? firstColumnDifficulties : laterColumnDifficulties;
                 const difficultyIndex = (slotIndex + laneIndex) % slotDifficulties.length;
-                const difficulty = slotDifficulties[difficultyIndex];
+                const baseDifficulty = this.registry.get('baseDifficulty') || 'easy'; // Default to 'easy' if not set
+                const requestedDifficulty = slotDifficulties[difficultyIndex];
+                const difficulty = this.getConstrainedDifficulty(baseDifficulty, requestedDifficulty);
 
-                // Create tower slot with maths problem
+                // Create tower slot with verb prompt
                 const towerSlot = new TowerSlot(this, x, y, laneIndex, slotIndex, difficulty);
-                const problem = this.mathsManager.generateProblemForDifficulty(difficulty);
-                towerSlot.setProblem(problem);
+                const prompt = this.verbManager.generatePromptForDifficulty(difficulty);
+                towerSlot.setPrompt(prompt);
 
                 // Initially hide slots beyond the first column
                 if (slotIndex >= this.visibleColumns) {
@@ -173,7 +192,9 @@ export default class GameScene extends Phaser.Scene {
             if (tower && tower.active) {
                 const laneIndex = tower.lane;
                 const slotIndex = tower.slotIndex;
-                const difficulty = tower.difficulty;
+                const baseDifficulty = this.registry.get('baseDifficulty') || 'easy';
+                const requestedDifficulty = tower.difficulty; // Original difficulty of the tower
+                const difficulty = this.getConstrainedDifficulty(baseDifficulty, requestedDifficulty);
                 const x = TOWER_SLOTS_X[slotIndex];
                 const y = LANES[laneIndex];
 
@@ -183,10 +204,10 @@ export default class GameScene extends Phaser.Scene {
                 // Destroy the tower
                 tower.destroy();
 
-                // Create a new tower slot with a fresh problem
+                // Create a new tower slot with a fresh verb prompt
                 const towerSlot = new TowerSlot(this, x, y, laneIndex, slotIndex, difficulty);
-                const problem = this.mathsManager.generateProblemForDifficulty(difficulty);
-                towerSlot.setProblem(problem);
+                const prompt = this.verbManager.generatePromptForDifficulty(difficulty);
+                towerSlot.setPrompt(prompt);
 
                 // Only show if within visible columns
                 if (slotIndex < this.visibleColumns) {
@@ -297,6 +318,11 @@ export default class GameScene extends Phaser.Scene {
             questionsAnswered: this.questionsAnswered
         } : null;
         this.hud.update(this.score, this.lives, waveInfo);
+
+        // Check for expired prompts and rotate (staggered, one at a time)
+        if (time > this.lastRotationTime + GAME.rotationCooldown) {
+            this.checkAndRotatePrompts(time);
+        }
     }
 
     gameOver() {
@@ -454,10 +480,10 @@ export default class GameScene extends Phaser.Scene {
         // Destroy the tower
         tower.destroy();
 
-        // Create a new tower slot with a fresh problem
+        // Create a new tower slot with a fresh verb prompt
         const towerSlot = new TowerSlot(this, x, y, laneIndex, slotIndex, difficulty);
-        const problem = this.mathsManager.generateProblemForDifficulty(difficulty);
-        towerSlot.setProblem(problem);
+        const prompt = this.verbManager.generatePromptForDifficulty(difficulty);
+        towerSlot.setPrompt(prompt);
 
         this.towerSlots[laneIndex][slotIndex] = towerSlot;
 
@@ -467,6 +493,9 @@ export default class GameScene extends Phaser.Scene {
     handleAnswerSubmit(answer) {
         console.log('Answer submitted:', answer);
         let anyCorrect = false;
+        let totalBonusPoints = 0;
+        let feedbackShown = false;
+        let allPrompts = []; // Collect all prompts for feedback
 
         // First, check answer against tower slots (to spawn new towers)
         // Only check visible columns
@@ -474,11 +503,19 @@ export default class GameScene extends Phaser.Scene {
             for (let slotIndex = 0; slotIndex < this.visibleColumns; slotIndex++) {
                 const towerSlot = this.towerSlots[laneIndex][slotIndex];
 
-                if (towerSlot && towerSlot.problem) {
-                    const isCorrect = this.mathsManager.checkAnswer(towerSlot.problem, answer);
+                if (towerSlot && towerSlot.prompt) {
+                    allPrompts.push(towerSlot.prompt); // Collect prompt
+                    const result = this.verbManager.validateAnswer(towerSlot.prompt, answer);
 
-                    if (isCorrect) {
+                    if (result.isCorrect) {
                         anyCorrect = true;
+                        totalBonusPoints += result.bonusPoints;
+
+                        // Show feedback for correct answer
+                        if (!feedbackShown) {
+                            this.showFeedback(result.correctForm, result.hasAccents, result.bonusPoints, true);
+                            feedbackShown = true;
+                        }
 
                         const x = TOWER_SLOTS_X[slotIndex];
                         const y = LANES[laneIndex];
@@ -492,9 +529,9 @@ export default class GameScene extends Phaser.Scene {
                         const tower = createTower(this, x, y, laneIndex, slotIndex, difficulty);
                         tower.activate(); // Tower starts active immediately
 
-                        // Assign a new problem to the tower
-                        const newProblem = this.mathsManager.generateProblemForDifficulty(difficulty);
-                        tower.setProblem(newProblem);
+                        // Assign a new verb prompt to the tower
+                        const newPrompt = this.verbManager.generatePromptForDifficulty(difficulty);
+                        tower.setPrompt(newPrompt);
 
                         this.towers.add(tower);
                         this.slots[laneIndex][slotIndex] = tower;
@@ -520,13 +557,21 @@ export default class GameScene extends Phaser.Scene {
 
         for (const tower of towers) {
             try {
-                if (tower.problem) {
-                    console.log('Checking tower problem:', tower.problem.expression, 'answer:', tower.problem.answer);
-                    const isCorrect = this.mathsManager.checkAnswer(tower.problem, answer);
-                    console.log('Is correct:', isCorrect);
+                if (tower.prompt) {
+                    allPrompts.push(tower.prompt); // Collect prompt
+                    console.log('Checking tower prompt:', tower.prompt.displayText);
+                    const result = this.verbManager.validateAnswer(tower.prompt, answer);
+                    console.log('Is correct:', result.isCorrect);
 
-                    if (isCorrect) {
+                    if (result.isCorrect) {
                         anyCorrect = true;
+                        totalBonusPoints += result.bonusPoints;
+
+                        // Show feedback for correct answer (only once per submission)
+                        if (!feedbackShown) {
+                            this.showFeedback(result.correctForm, result.hasAccents, result.bonusPoints, true);
+                            feedbackShown = true;
+                        }
 
                         // Apply upgrade using config-driven upgrade path
                         const upgraded = tower.applyUpgrade();
@@ -537,10 +582,10 @@ export default class GameScene extends Phaser.Scene {
                             console.log('Tower at max level, no upgrade applied');
                         }
 
-                        // Assign new problem
-                        const newProblem = this.mathsManager.generateProblemForDifficulty(tower.difficulty);
-                        tower.setProblem(newProblem);
-                        console.log('New problem assigned:', newProblem.expression);
+                        // Assign new verb prompt
+                        const newPrompt = this.verbManager.generatePromptForDifficulty(tower.difficulty);
+                        tower.setPrompt(newPrompt);
+                        console.log('New prompt assigned:', newPrompt.displayText);
 
                         // Visual feedback - pulse effect on the problem text
                         this.tweens.add({
@@ -558,11 +603,138 @@ export default class GameScene extends Phaser.Scene {
         }
 
         console.log('Any correct:', anyCorrect);
-        // Increment questions answered if any were correct
+        
+        // No immediate feedback on incorrect answers - let timeout rotation handle it
+        
+        // Increment questions answered and add bonus points if any were correct
         if (anyCorrect) {
             this.questionsAnswered++;
+            if (totalBonusPoints > 0) {
+                this.addScore(totalBonusPoints);
+                console.log(`Bonus points awarded: ${totalBonusPoints}`);
+            }
         }
+        
         // Flash input box
         this.inputBox.flash(anyCorrect);
+    }
+
+    /**
+     * Show feedback overlay with correct answer
+     * @param {string} correctForm - Correct answer with accents
+     * @param {boolean} userHadAccents - Whether user included accents
+     * @param {number} bonusPoints - Bonus points awarded
+     * @param {boolean} wasCorrect - Whether the answer was correct
+     */
+    showFeedback(correctForm, userHadAccents, bonusPoints, wasCorrect) {
+        // For correct answers with bonus points, show bonus indicator
+        if (wasCorrect && bonusPoints > 0) {
+            this.hud.showBonus(bonusPoints);
+        }
+        
+        // Always show the correct form as educational feedback
+        // Use different colors: green for correct, yellow for incorrect
+        this.inputBox.showFeedback(correctForm, wasCorrect);
+    }
+
+    /**
+     * Find the oldest expired prompt and rotate it with educational feedback.
+     * Only rotates ONE prompt at a time with cooldown for learning.
+     * @param {number} time - Current game time from scene.time.now
+     */
+    checkAndRotatePrompts(time) {
+        let oldestExpired = null;
+        let maxAge = -1;
+        const lifetime = GAME.promptLifetime;
+
+        // Helper to check if a prompt has expired
+        const checkCandidate = (candidate) => {
+            // Don't rotate if already showing answer
+            if (candidate && candidate.visible && candidate.prompt && candidate.promptSetTime && !candidate.isShowingAnswer) {
+                const age = time - candidate.promptSetTime;
+                if (age > lifetime && age > maxAge) {
+                    maxAge = age;
+                    oldestExpired = candidate;
+                }
+            }
+        };
+
+        // Check all visible tower slots
+        for (let l = 0; l < LANES.length; l++) {
+            for (let s = 0; s < this.visibleColumns; s++) {
+                checkCandidate(this.towerSlots[l][s]);
+            }
+        }
+
+        // Check all active towers
+        this.towers.children.each(tower => {
+            if (tower.active) {
+                checkCandidate(tower);
+            }
+        });
+
+        // If we found an expired prompt, show answer then rotate
+        if (oldestExpired) {
+            const correctForm = oldestExpired.prompt.correctAnswers[0];
+            const oldPrompt = oldestExpired.prompt.displayText;
+            
+            console.log('🔄 TIMEOUT: Showing answer for expired prompt:', oldPrompt);
+            console.log('✅ Correct answer:', correctForm);
+            
+            // Mark as showing answer to prevent duplicate rotations
+            oldestExpired.isShowingAnswer = true;
+            
+            // Show both the question and answer so you can learn the connection
+            if (oldestExpired.problemText) {
+                console.log('📝 Showing Q&A - Question:', oldPrompt, 'Answer:', correctForm);
+                
+                // Format: Question on one line, Answer in red below
+                const displayText = `${oldPrompt}\n→ ${correctForm}`;
+                
+                oldestExpired.problemText.setColor('#ffaa44'); // Orange/yellow for question
+                oldestExpired.problemText.setText(displayText);
+                oldestExpired.problemText.setFontSize(13); // Slightly bigger to fit both lines
+                oldestExpired.problemText.setFontStyle('bold'); // Make it bold
+                oldestExpired.problemText.setWordWrapWidth(100); // Ensure it wraps properly
+                
+                // Flash effect to draw attention
+                this.tweens.add({
+                    targets: oldestExpired.problemText,
+                    scaleX: 1.2,
+                    scaleY: 1.2,
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 1
+                });
+            }
+
+            // Wait 4 seconds, then rotate to new prompt
+            this.time.delayedCall(4000, () => {
+                if (!oldestExpired || !oldestExpired.active) {
+                    console.log('⚠️ Tower was destroyed before rotation completed');
+                    return;
+                }
+                
+                // Generate a new prompt for this slot/tower
+                const newPrompt = this.verbManager.generatePromptForDifficulty(oldestExpired.difficulty);
+                oldestExpired.setPrompt(newPrompt);
+                
+                // Reset text styling back to normal
+                if (oldestExpired.problemText) {
+                    oldestExpired.problemText.setColor('#ffffff'); // Back to white
+                    oldestExpired.problemText.setFontSize(12); // Back to normal
+                    oldestExpired.problemText.setFontStyle('normal');
+                    oldestExpired.problemText.setWordWrapWidth(90); // Back to normal wrap
+                }
+                
+                // Clear the flag
+                oldestExpired.isShowingAnswer = false;
+                
+                console.log('✨ Rotated to new prompt:', newPrompt.displayText);
+            });
+
+            // Update rotation timer to enforce cooldown
+            this.lastRotationTime = time;
+        }
     }
 }

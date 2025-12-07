@@ -25,3 +25,16 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+// Cleanup any rogue input elements from previous sessions (HMR safety)
+const existingInputs = document.querySelectorAll('input');
+existingInputs.forEach(input => input.remove());
+
+game.events.on('ready', () => {
+    const canvas = game.canvas;
+    if (canvas) {
+        // Just set tabindex to allow focus, but let Phaser handle the rest
+        canvas.setAttribute('tabindex', '0');
+        canvas.focus();
+    }
+});
