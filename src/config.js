@@ -160,7 +160,9 @@ export const PROJECTILE = {
 
 // Game settings
 export const GAME = {
-    startLives: 10
+    startLives: 10,
+    promptLifetime: 20000,    // 20 seconds before prompt expires and rotates
+    rotationCooldown: 3000    // 3 seconds minimum between rotations (staggered)
 };
 
 // Wave configuration
@@ -213,5 +215,49 @@ export const DIFFICULTY_SETTINGS = {
         label: 'Very Hard',
         waveDelay: 0,         // No delay
         speedMultiplier: 2.0
+    }
+};
+
+// Spanish verb conjugation - Subject pronouns
+export const PRONOUNS = [
+    'yo',         // I
+    'tú',         // you (informal singular)
+    'él',         // he
+    'ella',       // she
+    'nosotros',   // we
+    'vosotros',   // you (informal plural, Castilian)
+    'ellos',      // they (masculine/mixed)
+    'ellas'       // they (feminine)
+];
+
+// Spanish verb conjugation - Tense mapping to difficulty tiers
+// Maps game difficulty (easy/medium/hard) to linguistic complexity (CEFR-aligned)
+export const TENSE_MAPPING = {
+    easy: {
+        tenses: ['PRESENT'],
+        moods: ['INDICATIVE'],
+        label: 'Beginner',
+        cefr: 'A1-A2',
+        description: 'Present tense (regular and irregular verbs)'
+    },
+    medium: {
+        tenses: ['PRETERITE', 'IMPERFECT'],
+        moods: ['INDICATIVE'],
+        label: 'Intermediate',
+        cefr: 'B1',
+        description: 'Indefinido and Imperfect (past tenses)'
+    },
+    hard: {
+        // Subjunctive mood tenses
+        tenses: ['PRESENT', 'IMPERFECT'],
+        moods: ['SUBJUNCTIVE'],
+        // Plus conditional and future indicative
+        additionalTenses: [
+            { tense: 'PRESENT', mood: 'CONDITIONAL' },
+            { tense: 'FUTURE', mood: 'INDICATIVE' }
+        ],
+        label: 'Advanced',
+        cefr: 'B2-C1',
+        description: 'Subjunctive, Conditional, and Future tenses'
     }
 };
