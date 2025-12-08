@@ -1,6 +1,6 @@
-# Maths vs Monsters - Implementation Plan
+# Spanish vs Monsters - Implementation Plan
 
-A lane-based tower defence game where solving maths problems activates towers that shoot bouncing balls at monsters.
+A lane-based tower defence game where solving Spanish verb conjugation problems activates towers that shoot bouncing balls at monsters.
 
 ## Tech Stack
 

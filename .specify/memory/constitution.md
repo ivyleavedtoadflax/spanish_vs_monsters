@@ -25,7 +25,7 @@ Templates Requiring Updates:
 Follow-up TODOs:
 - Consider adding testing framework if project grows beyond educational scope
 - Ratification date set to today as initial adoption
-- Project name clarified as "Maths vs Monsters" (based on package.json)
+- Project name clarified as "Spanish vs Monsters" (based on package.json)
 
 Notes:
 - This is a simple educational game project with intentionally minimal complexity
@@ -34,7 +34,7 @@ Notes:
 =============================================================================
 -->
 
-# Maths vs Monsters Constitution
+# Spanish vs Monsters Constitution
 
 ## Core Principles
 
