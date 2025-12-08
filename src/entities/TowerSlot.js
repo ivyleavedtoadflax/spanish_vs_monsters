@@ -25,7 +25,7 @@ export default class TowerSlot extends Phaser.GameObjects.Container {
 
         // Create prompt text display (wider for verb prompts)
         this.problemText = scene.add.text(0, 0, '', {
-            fontSize: '12px',
+            fontSize: '16px',
             fontFamily: 'Arial',
             color: '#ffffff',
             align: 'center',
