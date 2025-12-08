@@ -1,6 +1,6 @@
-// Canvas dimensions - optimized for laptop displays (1280x720, 16:9 aspect ratio)
-export const CANVAS_WIDTH = 1280;
-export const GAME_AREA_HEIGHT = 640;  // Height of the playable game area (where projectiles bounce)
+// Canvas dimensions
+export const CANVAS_WIDTH = 1200;
+export const GAME_AREA_HEIGHT = 600;  // Height of the playable game area (where projectiles bounce)
 export const INPUT_AREA_HEIGHT = 80;  // Height reserved for input box below game area
 export const CANVAS_HEIGHT = GAME_AREA_HEIGHT + INPUT_AREA_HEIGHT;  // Total canvas height
 
@@ -12,12 +12,11 @@ export const LANES = Array.from({ length: LANE_COUNT }, (_, i) =>
 );
 
 // Tower slot positions - 5 slots per lane on the left side
-// Using percentage-based positioning for responsive scaling
 const SLOT_COUNT = 5;
-const SLOT_START_PERCENT = 0.0625;      // 6.25% from left edge (80/1280)
-const SLOT_SPACING_PERCENT = 0.078125;  // 7.8125% spacing (100/1280)
+const SLOT_START_X = 80;
+const SLOT_SPACING = 100;
 export const TOWER_SLOTS_X = Array.from({ length: SLOT_COUNT }, (_, i) =>
-    Math.round(CANVAS_WIDTH * (SLOT_START_PERCENT + i * SLOT_SPACING_PERCENT))
+    SLOT_START_X + i * SLOT_SPACING
 );
 
 // Tower column progression - columns unlock as waves progress

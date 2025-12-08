@@ -38,8 +38,3 @@ game.events.on('ready', () => {
         canvas.focus();
     }
 });
-
-// Handle window resize to properly scale the game
-window.addEventListener('resize', () => {
-    game.scale.refresh();
-});
