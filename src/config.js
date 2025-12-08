@@ -1,7 +1,7 @@
-// Canvas dimensions
-export const CANVAS_WIDTH = 1200;
-export const GAME_AREA_HEIGHT = 600;  // Height of the playable game area (where projectiles bounce)
-export const INPUT_AREA_HEIGHT = 80;  // Height reserved for input box below game area
+// Canvas dimensions - increased for better readability on modern screens
+export const CANVAS_WIDTH = 1600;
+export const GAME_AREA_HEIGHT = 800;  // Height of the playable game area (where projectiles bounce)
+export const INPUT_AREA_HEIGHT = 100;  // Height reserved for input box below game area
 export const CANVAS_HEIGHT = GAME_AREA_HEIGHT + INPUT_AREA_HEIGHT;  // Total canvas height
 
 // Lane configuration - 5 lanes evenly distributed within game area
