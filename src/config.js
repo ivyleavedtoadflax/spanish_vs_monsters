@@ -35,7 +35,7 @@ export const COLORS = {
 
 // Monster settings
 export const MONSTER = {
-    size: 40,
+    size: 44,  // Increased from 40 (10% larger)
     speed: 25,
     health: {
         easy: 1,
