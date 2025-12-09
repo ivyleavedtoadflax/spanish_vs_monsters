@@ -101,11 +101,17 @@ export default class InputBox extends Phaser.GameObjects.Container {
             this.updateDisplay();
         });
 
-        // Handle enter key submission
+        // Handle enter key submission and arrow key history navigation
         this.htmlInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 this.submit();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.navigateHistoryUp();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.navigateHistoryDown();
             }
         });
 
@@ -199,24 +205,14 @@ export default class InputBox extends Phaser.GameObjects.Container {
             // Handle ArrowUp for history
             if (event.keyCode === 38) { // ArrowUp
                 event.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
-                if (this.history.length > 0) {
-                    this.historyIndex = Math.max(0, this.historyIndex - 1);
-                    this.currentValue = this.history[this.historyIndex];
-                    this.syncToHtmlInput();
-                    this.updateDisplay();
-                }
+                this.navigateHistoryUp();
                 return;
             }
 
-            // Handle ArrowDown for history (optional, but good for consistency)
+            // Handle ArrowDown for history
             if (event.keyCode === 40) { // ArrowDown
                 event.preventDefault(); // Prevent default browser behavior (e.g., scrolling)
-                if (this.history.length > 0) {
-                    this.historyIndex = Math.min(this.history.length - 1, this.historyIndex + 1);
-                    this.currentValue = this.history[this.historyIndex];
-                    this.syncToHtmlInput();
-                    this.updateDisplay();
-                }
+                this.navigateHistoryDown();
                 return;
             }
 
@@ -246,6 +242,43 @@ export default class InputBox extends Phaser.GameObjects.Container {
         this.textDisplay.setText(this.currentValue);
         // Move cursor to end of text
         this.cursor.x = -90 + this.textDisplay.width + 2;
+    }
+
+    navigateHistoryUp() {
+        if (this.history.length === 0) return;
+
+        // If at initial position (-1), go to most recent entry
+        if (this.historyIndex === -1) {
+            this.historyIndex = this.history.length - 1;
+        } else {
+            // Otherwise move backwards (to older entries)
+            this.historyIndex = Math.max(0, this.historyIndex - 1);
+        }
+
+        this.currentValue = this.history[this.historyIndex];
+        this.syncToHtmlInput();
+        this.updateDisplay();
+    }
+
+    navigateHistoryDown() {
+        if (this.history.length === 0) return;
+
+        // If already at initial position, do nothing
+        if (this.historyIndex === -1) return;
+
+        // Move forward (to newer entries)
+        this.historyIndex++;
+
+        // If we've moved past the most recent entry, reset to initial position
+        if (this.historyIndex >= this.history.length) {
+            this.historyIndex = -1;
+            this.currentValue = '';
+        } else {
+            this.currentValue = this.history[this.historyIndex];
+        }
+
+        this.syncToHtmlInput();
+        this.updateDisplay();
     }
 
     submit() {
