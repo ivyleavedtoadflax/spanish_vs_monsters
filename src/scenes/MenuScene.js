@@ -169,12 +169,19 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         // Instructions
-        this.add.text(CANVAS_WIDTH / 2, 600,
-            'Type the correct verb conjugation to activate towers. Use accents for bonus points!', {
-            fontSize: '14px',
-            fontFamily: 'Arial',
-            color: '#2fff00ff'
-        }).setOrigin(0.5);
+        const instructions = [
+            'Type the correct verb conjugation to activate towers.',
+            'Use accents for bonus points!',
+            'Press ↑/↓ arrows to recall previous answers.'
+        ];
+        
+        instructions.forEach((text, index) => {
+            this.add.text(CANVAS_WIDTH / 2, 580 + (index * 22), text, {
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#aaaacc'
+            }).setOrigin(0.5);
+        });
 
         // Audio controls (bottom right)
         this.audioControls = new AudioControls(this);
